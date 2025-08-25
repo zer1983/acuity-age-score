@@ -46,19 +46,21 @@ export const UserNav: React.FC = () => {
   };
 
   const getInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name
-        .split(' ')
-        .map(name => name[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
+    const fullName = profile?.full_name?.trim();
+    if (fullName) {
+      const parts = fullName.split(' ').filter(Boolean);
+      const initials = parts.slice(0, 2).map(p => p[0]?.toUpperCase() ?? '').join('');
+      if (initials) return initials;
     }
-    return user?.email?.[0]?.toUpperCase() || 'U';
+    const emailFirstChar = user?.email?.trim()?.[0];
+    return emailFirstChar ? emailFirstChar.toUpperCase() : 'U';
   };
 
   const getDisplayName = () => {
-    return profile?.full_name || user?.email || 'User';
+    const fullName = profile?.full_name?.trim();
+    if (fullName) return fullName;
+    const email = user?.email?.trim();
+    return email || 'User';
   };
 
   return (
