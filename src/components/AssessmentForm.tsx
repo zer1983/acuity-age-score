@@ -6,9 +6,11 @@ import { Separator } from '@/components/ui/separator';
 import { PatientDemographics } from './PatientDemographics';
 import { AssessmentQuestion } from './AssessmentQuestion';
 import { AssessmentResults } from './AssessmentResults';
+import { UserNav } from './UserNav';
 import { ClipboardList, Calculator, Save, RotateCcw, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAssessmentData } from '@/hooks/useAssessmentData';
+import { useAuth } from '@/hooks/useAuth';
 
 interface QuestionOption {
   value: string;
@@ -50,6 +52,7 @@ export const AssessmentForm: React.FC = () => {
 
   // Fetch assessment data from Supabase
   const { questions: allQuestions, categories: availableCategories, loading, error } = useAssessmentData();
+  const { profile } = useAuth();
 
   const relevantQuestions = useMemo(() => {
     if (patientData.age === '') return allQuestions.filter(q => q.ageGroup === 'all');
@@ -137,13 +140,25 @@ export const AssessmentForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-assessment p-4 space-y-6">
-      <header className="text-center py-6">
-        <h1 className="text-3xl font-bold text-primary mb-2">
-          Acuity Patient Assessment System
-        </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Comprehensive patient assessment with age-dependent scoring for clinical decision support
-        </p>
+      <header className="py-6">
+        <div className="flex justify-between items-center max-w-4xl mx-auto">
+          <div className="text-center flex-1">
+            <h1 className="text-3xl font-bold text-primary mb-2">
+              Acuity Patient Assessment System
+            </h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Comprehensive patient assessment with age-dependent scoring for clinical decision support
+            </p>
+          </div>
+          <UserNav />
+        </div>
+        {profile && (
+          <div className="text-center mt-4">
+            <p className="text-sm text-muted-foreground">
+              Welcome back, {profile.full_name || 'User'}
+            </p>
+          </div>
+        )}
       </header>
 
       <div className="max-w-4xl mx-auto space-y-6">
