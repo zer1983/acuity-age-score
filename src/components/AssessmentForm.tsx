@@ -6,8 +6,9 @@ import { Separator } from '@/components/ui/separator';
 import { PatientDemographics } from './PatientDemographics';
 import { AssessmentQuestion } from './AssessmentQuestion';
 import { AssessmentResults } from './AssessmentResults';
-import { ClipboardList, Calculator, Save, RotateCcw } from 'lucide-react';
+import { ClipboardList, Calculator, Save, RotateCcw, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAssessmentData } from '@/hooks/useAssessmentData';
 
 interface QuestionOption {
   value: string;
@@ -47,89 +48,8 @@ export const AssessmentForm: React.FC = () => {
   const [answers, setAnswers] = useState<Record<string, AssessmentAnswer>>({});
   const [showResults, setShowResults] = useState(false);
 
-  // Sample assessment questions - in real app, this would come from API/config
-  const allQuestions: AssessmentQuestionData[] = [
-    {
-      id: 'neurological-1',
-      title: 'Level of Consciousness',
-      description: 'Patient\'s response to verbal and physical stimuli',
-      category: 'Neurological',
-      ageGroup: 'all',
-      options: [
-        { value: 'alert', label: 'Alert and oriented', score: 0 },
-        { value: 'lethargic', label: 'Lethargic but responsive', score: 1 },
-        { value: 'stuporous', label: 'Stuporous (difficult to arouse)', score: 2 },
-        { value: 'unresponsive', label: 'Unresponsive', score: 3 }
-      ]
-    },
-    {
-      id: 'respiratory-1',
-      title: 'Respiratory Rate',
-      description: 'Breaths per minute',
-      category: 'Respiratory',
-      ageGroup: 'all',
-      options: [
-        { value: 'normal', label: '12-20 breaths/min (normal)', score: 0 },
-        { value: 'mild-tachy', label: '21-30 breaths/min (mild tachypnea)', score: 1 },
-        { value: 'moderate-tachy', label: '31-40 breaths/min (moderate tachypnea)', score: 2 },
-        { value: 'severe-tachy', label: '>40 breaths/min (severe tachypnea)', score: 3 }
-      ]
-    },
-    {
-      id: 'cardiovascular-1',
-      title: 'Heart Rate',
-      description: 'Beats per minute',
-      category: 'Cardiovascular',
-      ageGroup: 'all',
-      options: [
-        { value: 'normal-hr', label: '60-100 bpm (normal)', score: 0 },
-        { value: 'mild-tachy-hr', label: '101-120 bpm (mild tachycardia)', score: 1 },
-        { value: 'moderate-tachy-hr', label: '121-150 bpm (moderate tachycardia)', score: 2 },
-        { value: 'severe-tachy-hr', label: '>150 bpm (severe tachycardia)', score: 3 }
-      ]
-    },
-    // Adult-specific question
-    {
-      id: 'adult-pain',
-      title: 'Pain Assessment (Adult)',
-      description: 'Patient self-reported pain level (0-10 scale)',
-      category: 'Pain Assessment',
-      ageGroup: 'adult',
-      options: [
-        { value: 'no-pain', label: '0 - No pain', score: 0 },
-        { value: 'mild-pain', label: '1-3 - Mild pain', score: 1 },
-        { value: 'moderate-pain', label: '4-6 - Moderate pain', score: 2 },
-        { value: 'severe-pain', label: '7-10 - Severe pain', score: 3 }
-      ]
-    },
-    // Pediatric-specific questions
-    {
-      id: 'pediatric-pain',
-      title: 'Pediatric Pain Assessment',
-      description: 'FLACC scale or age-appropriate pain assessment',
-      category: 'Pain Assessment',
-      ageGroup: 'pediatric',
-      options: [
-        { value: 'comfortable', label: 'Comfortable, no distress', score: 0 },
-        { value: 'mild-distress', label: 'Mild distress or discomfort', score: 1 },
-        { value: 'moderate-distress', label: 'Moderate distress', score: 2 },
-        { value: 'severe-distress', label: 'Severe distress or inconsolable', score: 3 }
-      ]
-    },
-    {
-      id: 'pediatric-development',
-      title: 'Developmental Response',
-      description: 'Age-appropriate developmental responses',
-      category: 'Developmental',
-      ageGroup: 'pediatric',
-      options: [
-        { value: 'age-appropriate', label: 'Age-appropriate responses', score: 0 },
-        { value: 'mildly-delayed', label: 'Mildly delayed responses', score: 1 },
-        { value: 'significantly-delayed', label: 'Significantly delayed responses', score: 2 },
-        { value: 'no-response', label: 'No developmental responses', score: 3 }
-      ]
-    }
-  ];
+  // Fetch assessment data from Supabase
+  const { questions: allQuestions, categories: availableCategories, loading, error } = useAssessmentData();
 
   const relevantQuestions = useMemo(() => {
     if (patientData.age === '') return allQuestions.filter(q => q.ageGroup === 'all');
@@ -184,9 +104,36 @@ export const AssessmentForm: React.FC = () => {
   };
 
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(relevantQuestions.map(q => q.category)));
-    return cats;
+    return Array.from(new Set(relevantQuestions.map(q => q.category)));
   }, [relevantQuestions]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-assessment p-4 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="py-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Loading assessment data...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-assessment p-4 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="py-8 text-center">
+            <p className="text-destructive mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-assessment p-4 space-y-6">
