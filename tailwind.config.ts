@@ -26,11 +26,14 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					hover: 'hsl(var(--primary-hover))',
+					light: 'hsl(var(--primary-light))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					foreground: 'hsl(var(--secondary-foreground))',
+					hover: 'hsl(var(--secondary-hover))'
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -52,6 +55,14 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				assessment: {
+					pending: 'hsl(var(--assessment-pending))',
+					'pending-foreground': 'hsl(var(--assessment-pending-foreground))',
+					complete: 'hsl(var(--assessment-complete))',
+					'complete-foreground': 'hsl(var(--assessment-complete-foreground))',
+					warning: 'hsl(var(--assessment-warning))',
+					'warning-foreground': 'hsl(var(--assessment-warning-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -62,6 +73,19 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
+			},
+			backgroundImage: {
+				'gradient-medical': 'var(--gradient-medical)',
+				'gradient-assessment': 'var(--gradient-assessment)',
+				'gradient-score': 'var(--gradient-score)'
+			},
+			boxShadow: {
+				'medical': 'var(--shadow-medical)',
+				'card-custom': 'var(--shadow-card)',
+				'elevated': 'var(--shadow-elevated)'
+			},
+			transitionProperty: {
+				'medical': 'var(--transition-medical)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

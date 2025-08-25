@@ -15,9 +15,11 @@ const buttonVariants = cva(
         outline:
           "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary-hover",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        medical: "bg-gradient-medical text-primary-foreground hover:opacity-90 shadow-medical transition-all duration-300",
+        assessment: "bg-assessment-complete text-assessment-complete-foreground hover:bg-assessment-complete/90 border border-assessment-complete-foreground/20",
       },
       size: {
         default: "h-10 px-4 py-2",
