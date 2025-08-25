@@ -63,7 +63,7 @@ export const AssessmentForm: React.FC = () => {
       (isPediatric && q.ageGroup === 'pediatric') ||
       (!isPediatric && q.ageGroup === 'adult')
     );
-  }, [patientData.age]);
+  }, [patientData.age, allQuestions]);
 
   const totalScore = useMemo(() => {
     return Object.values(answers).reduce((sum, answer) => sum + answer.score, 0);
@@ -181,7 +181,7 @@ export const AssessmentForm: React.FC = () => {
                   Progress: {answeredQuestions}/{totalQuestions} questions completed
                 </span>
                 <Badge variant={isComplete ? "default" : "secondary"}>
-                  {Math.round((answeredQuestions / totalQuestions) * 100)}% Complete
+                  {totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0}% Complete
                 </Badge>
               </div>
             </CardHeader>
