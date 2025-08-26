@@ -40,6 +40,94 @@ export type Database = {
           },
         ]
       }
+      assessment_answers: {
+        Row: {
+          assessment_id: string
+          category: string
+          created_at: string
+          id: string
+          question_id: string
+          question_title: string
+          selected_label: string
+          selected_score: number
+          selected_value: string
+        }
+        Insert: {
+          assessment_id: string
+          category: string
+          created_at?: string
+          id?: string
+          question_id: string
+          question_title: string
+          selected_label: string
+          selected_score: number
+          selected_value: string
+        }
+        Update: {
+          assessment_id?: string
+          category?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+          question_title?: string
+          selected_label?: string
+          selected_score?: number
+          selected_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_answers_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessments: {
+        Row: {
+          assessment_date: string
+          created_at: string
+          id: string
+          patient_age: number
+          patient_gender: string
+          patient_name: string
+          total_score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assessment_date?: string
+          created_at?: string
+          id?: string
+          patient_age: number
+          patient_gender: string
+          patient_name: string
+          total_score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assessment_date?: string
+          created_at?: string
+          id?: string
+          patient_age?: number
+          patient_gender?: string
+          patient_name?: string
+          total_score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_assessments_user_id"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       Category: {
         Row: {
           Category_ID: string

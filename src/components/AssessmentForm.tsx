@@ -6,10 +6,12 @@ import { Separator } from '@/components/ui/separator';
 import { PatientDemographics } from './PatientDemographics';
 import { AssessmentQuestion } from './AssessmentQuestion';
 import { AssessmentResults } from './AssessmentResults';
+import { AssessmentHistory } from './AssessmentHistory';
 import { UserNav } from './UserNav';
-import { ClipboardList, Calculator, Save, RotateCcw, Loader2 } from 'lucide-react';
+import { ClipboardList, Calculator, Save, RotateCcw, Loader2, History } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAssessmentData } from '@/hooks/useAssessmentData';
+import { useAssessmentStorage } from '@/hooks/useAssessmentStorage';
 import { useAuth } from '@/hooks/useAuth';
 
 interface QuestionOption {
@@ -49,10 +51,13 @@ export const AssessmentForm: React.FC = () => {
 
   const [answers, setAnswers] = useState<Record<string, AssessmentAnswer>>({});
   const [showResults, setShowResults] = useState(false);
+  const [viewMode, setViewMode] = useState<'assessment' | 'history'>('assessment');
+  const [assessmentSaved, setAssessmentSaved] = useState(false);
 
   // Fetch assessment data from Supabase
   const { questions: allQuestions, categories: availableCategories, loading, error } = useAssessmentData();
   const { profile } = useAuth();
+  const { saveAssessment, isLoading: isSaving } = useAssessmentStorage();
 
   const relevantQuestions = useMemo(() => {
     if (patientData.age === '') return allQuestions.filter(q => q.ageGroup === 'all');
@@ -96,9 +101,48 @@ export const AssessmentForm: React.FC = () => {
     });
   };
 
+  const handleSaveAssessment = async () => {
+    if (!showResults || !isComplete) {
+      toast({
+        title: "Cannot Save Assessment",
+        description: "Please complete and calculate the assessment first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Prepare the assessment data for storage
+    const assessmentData = {
+      patientData: {
+        name: patientData.name,
+        age: patientData.age as number,
+        gender: patientData.patientId, // Using patientId as gender for now
+      },
+      answers: Object.values(answers).map(answer => {
+        const question = relevantQuestions.find(q => q.id === answer.questionId);
+        const option = question?.options.find(opt => opt.value === answer.value);
+        return {
+          questionId: answer.questionId,
+          questionTitle: question?.title || '',
+          category: question?.category || '',
+          selectedValue: answer.value,
+          selectedLabel: option?.label || '',
+          selectedScore: answer.score,
+        };
+      }),
+      totalScore,
+    };
+
+    const assessmentId = await saveAssessment(assessmentData);
+    if (assessmentId) {
+      setAssessmentSaved(true);
+    }
+  };
+
   const handleReset = () => {
     setAnswers({});
     setShowResults(false);
+    setAssessmentSaved(false);
     setPatientData({ patientId: '', age: '', name: '' });
     toast({
       title: "Assessment Reset",
@@ -150,7 +194,29 @@ export const AssessmentForm: React.FC = () => {
               Comprehensive patient assessment with age-dependent scoring for clinical decision support
             </p>
           </div>
-          <UserNav />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+              <Button
+                variant={viewMode === 'assessment' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('assessment')}
+                className="gap-2"
+              >
+                <ClipboardList className="h-4 w-4" />
+                Assessment
+              </Button>
+              <Button
+                variant={viewMode === 'history' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('history')}
+                className="gap-2"
+              >
+                <History className="h-4 w-4" />
+                History
+              </Button>
+            </div>
+            <UserNav />
+          </div>
         </div>
         {profile && (
           <div className="text-center mt-4">
@@ -162,111 +228,155 @@ export const AssessmentForm: React.FC = () => {
       </header>
 
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Patient Demographics */}
-        <PatientDemographics
-          patientData={patientData}
-          onPatientDataChange={setPatientData}
-        />
+        {viewMode === 'assessment' ? (
+          <>
+            {/* Patient Demographics */}
+            <PatientDemographics
+              patientData={patientData}
+              onPatientDataChange={setPatientData}
+            />
 
-        {/* Assessment Questions */}
-        {patientData.age !== '' && (
-          <Card className="shadow-card-custom">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-primary">
-                <ClipboardList className="h-5 w-5" />
-                Clinical Assessment
-              </CardTitle>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>
-                  Progress: {answeredQuestions}/{totalQuestions} questions completed
-                </span>
-                <Badge variant={isComplete ? "default" : "secondary"}>
-                  {Math.round((answeredQuestions / totalQuestions) * 100)}% Complete
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {categories.map((category) => (
-                <div key={category}>
-                  <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <div className="w-1 h-6 bg-primary rounded-full"></div>
-                    {category}
-                  </h3>
-                  <div className="grid gap-4">
-                    {relevantQuestions
-                      .filter(q => q.category === category)
-                      .map((question) => (
-                        <AssessmentQuestion
-                          key={question.id}
-                          id={question.id}
-                          title={question.title}
-                          description={question.description}
-                          options={question.options}
-                          selectedValue={answers[question.id]?.value || ''}
-                          onValueChange={handleAnswerChange}
-                          category={question.category}
-                          isRequired={question.isRequired}
-                        />
-                      ))}
+            {/* Assessment Questions */}
+            {patientData.age !== '' && (
+              <Card className="shadow-card-custom">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3 text-primary">
+                    <ClipboardList className="h-5 w-5" />
+                    Clinical Assessment
+                  </CardTitle>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>
+                      Progress: {answeredQuestions}/{totalQuestions} questions completed
+                    </span>
+                    <Badge variant={isComplete ? "default" : "secondary"}>
+                      {Math.round((answeredQuestions / totalQuestions) * 100)}% Complete
+                    </Badge>
                   </div>
-                  {category !== categories[categories.length - 1] && (
-                    <Separator className="my-6" />
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {categories.map((category) => (
+                    <div key={category}>
+                      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <div className="w-1 h-6 bg-primary rounded-full"></div>
+                        {category}
+                      </h3>
+                      <div className="grid gap-4">
+                        {relevantQuestions
+                          .filter(q => q.category === category)
+                          .map((question) => (
+                            <AssessmentQuestion
+                              key={question.id}
+                              id={question.id}
+                              title={question.title}
+                              description={question.description}
+                              options={question.options}
+                              selectedValue={answers[question.id]?.value || ''}
+                              onValueChange={handleAnswerChange}
+                              category={question.category}
+                              isRequired={question.isRequired}
+                            />
+                          ))}
+                      </div>
+                      {category !== categories[categories.length - 1] && (
+                        <Separator className="my-6" />
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Action Buttons */}
-        {patientData.age !== '' && (
-          <Card className="shadow-card-custom">
-            <CardContent className="py-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">{totalScore}</div>
-                    <div className="text-sm text-muted-foreground">Current Score</div>
+            {/* Action Buttons */}
+            {patientData.age !== '' && (
+              <Card className="shadow-card-custom">
+                <CardContent className="py-6">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-primary">{totalScore}</div>
+                        <div className="text-sm text-muted-foreground">Current Score</div>
+                      </div>
+                      <Separator orientation="vertical" className="h-12 hidden sm:block" />
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-muted-foreground">{answeredQuestions}/{totalQuestions}</div>
+                        <div className="text-sm text-muted-foreground">Completed</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <Button 
+                        variant="outline" 
+                        onClick={handleReset}
+                        className="gap-2"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Reset
+                      </Button>
+                      <Button 
+                        onClick={handleCalculateScore}
+                        disabled={!isComplete}
+                        className="gap-2 bg-gradient-medical hover:opacity-90 transition-opacity"
+                      >
+                        <Calculator className="h-4 w-4" />
+                        Calculate Final Score
+                      </Button>
+                    </div>
                   </div>
-                  <Separator orientation="vertical" className="h-12 hidden sm:block" />
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-muted-foreground">{answeredQuestions}/{totalQuestions}</div>
-                    <div className="text-sm text-muted-foreground">Completed</div>
-                  </div>
-                </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Results */}
+            {showResults && (
+              <>
+                <AssessmentResults
+                  patientData={patientData}
+                  answers={answers}
+                  totalScore={totalScore}
+                  categories={categories}
+                  questions={relevantQuestions}
+                />
                 
-                <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleReset}
-                    className="gap-2"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Reset
-                  </Button>
-                  <Button 
-                    onClick={handleCalculateScore}
-                    disabled={!isComplete}
-                    className="gap-2 bg-gradient-medical hover:opacity-90 transition-opacity"
-                  >
-                    <Calculator className="h-4 w-4" />
-                    Calculate Final Score
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Results */}
-        {showResults && (
-          <AssessmentResults
-            patientData={patientData}
-            answers={answers}
-            totalScore={totalScore}
-            categories={categories}
-            questions={relevantQuestions}
-          />
+                {/* Save Assessment Button */}
+                {!assessmentSaved && (
+                  <Card className="shadow-card-custom">
+                    <CardContent className="py-6">
+                      <div className="flex justify-center">
+                        <Button 
+                          onClick={handleSaveAssessment}
+                          disabled={isSaving}
+                          className="gap-2 bg-gradient-medical hover:opacity-90 transition-opacity"
+                          size="lg"
+                        >
+                          {isSaving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                          {isSaving ? 'Saving Assessment...' : 'Save Assessment'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {assessmentSaved && (
+                  <Card className="shadow-card-custom border-green-200">
+                    <CardContent className="py-6 text-center">
+                      <div className="text-green-600 mb-2">
+                        ✓ Assessment saved successfully!
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        You can view this assessment in your history at any time.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          <AssessmentHistory />
         )}
       </div>
     </div>
