@@ -22,6 +22,26 @@ export const useAuth = () => {
   useEffect(() => {
     let isMounted = true;
 
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!isMounted) return;
+        
+        console.log('Auth state change:', event, session?.user?.id);
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        
+        // Fetch profile for authenticated users
+        if (session?.user) {
+          fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+      }
+    );
+
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -38,13 +58,13 @@ export const useAuth = () => {
         if (isMounted) {
           setSession(session);
           setUser(session?.user ?? null);
+          setLoading(false);
           
           if (session?.user) {
-            await fetchProfile(session.user.id);
+            fetchProfile(session.user.id);
           } else {
             setProfile(null);
           }
-          setLoading(false);
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error);
@@ -53,28 +73,6 @@ export const useAuth = () => {
         }
       }
     };
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!isMounted) return;
-        
-        console.log('Auth state change:', event, session?.user?.id);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Set loading to false immediately for auth state changes
-        setLoading(false);
-        
-        // Fetch profile after setting loading to false
-        if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          fetchProfile(session.user.id);
-        } else if (!session) {
-          setProfile(null);
-        }
-      }
-    );
 
     getInitialSession();
 

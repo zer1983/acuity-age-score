@@ -11,18 +11,8 @@ interface AuthGuardProps {
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  const [timeoutReached, setTimeoutReached] = useState(false);
 
-  // Add a timeout to prevent infinite loading
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setTimeoutReached(true);
-    }, 10000); // 10 second timeout
-
-    return () => clearTimeout(timeout);
-  }, []);
-
-  if (loading && !timeoutReached) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-assessment flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -35,11 +25,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
-  if (timeoutReached && loading) {
-    console.warn('Auth loading timeout reached, redirecting to auth page');
-  }
-
-  if (!isAuthenticated || timeoutReached) {
+  if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
 
