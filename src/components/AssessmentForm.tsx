@@ -12,7 +12,7 @@ import { ClipboardList, Calculator, Save, RotateCcw, Loader2, History } from 'lu
 import { toast } from '@/hooks/use-toast';
 import { useAssessmentData } from '@/hooks/useAssessmentData';
 import { useAssessmentStorage } from '@/hooks/useAssessmentStorage';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface QuestionOption {
   value: string;
@@ -43,13 +43,21 @@ interface AssessmentAnswer {
 }
 
 export const AssessmentForm: React.FC = () => {
-  const [patientData, setPatientData] = useState<PatientData>({
-    patientId: '',
-    age: '',
-    name: ''
+  // Load saved data from localStorage on component mount
+  const [patientData, setPatientData] = useState<PatientData>(() => {
+    const saved = localStorage.getItem('assessment-patient-data');
+    return saved ? JSON.parse(saved) : {
+      patientId: '',
+      age: '',
+      name: ''
+    };
   });
 
-  const [answers, setAnswers] = useState<Record<string, AssessmentAnswer>>({});
+  const [answers, setAnswers] = useState<Record<string, AssessmentAnswer>>(() => {
+    const saved = localStorage.getItem('assessment-answers');
+    return saved ? JSON.parse(saved) : {};
+  });
+  
   const [showResults, setShowResults] = useState(false);
   const [viewMode, setViewMode] = useState<'assessment' | 'history'>('assessment');
   const [assessmentSaved, setAssessmentSaved] = useState(false);
@@ -79,10 +87,13 @@ export const AssessmentForm: React.FC = () => {
   const isComplete = answeredQuestions === totalQuestions && patientData.patientId && patientData.name && patientData.age !== '';
 
   const handleAnswerChange = (questionId: string, value: string, score: number) => {
-    setAnswers(prev => ({
-      ...prev,
+    const newAnswers = {
+      ...answers,
       [questionId]: { questionId, value, score }
-    }));
+    };
+    setAnswers(newAnswers);
+    // Save to localStorage
+    localStorage.setItem('assessment-answers', JSON.stringify(newAnswers));
   };
 
   const handleCalculateScore = () => {
@@ -143,7 +154,13 @@ export const AssessmentForm: React.FC = () => {
     setAnswers({});
     setShowResults(false);
     setAssessmentSaved(false);
-    setPatientData({ patientId: '', age: '', name: '' });
+    const resetPatientData: PatientData = { patientId: '', age: '', name: '' };
+    setPatientData(resetPatientData);
+    
+    // Clear localStorage
+    localStorage.removeItem('assessment-answers');
+    localStorage.removeItem('assessment-patient-data');
+    
     toast({
       title: "Assessment Reset",
       description: "All data has been cleared.",
@@ -233,7 +250,11 @@ export const AssessmentForm: React.FC = () => {
             {/* Patient Demographics */}
             <PatientDemographics
               patientData={patientData}
-              onPatientDataChange={setPatientData}
+              onPatientDataChange={(data) => {
+                setPatientData(data);
+                // Save to localStorage
+                localStorage.setItem('assessment-patient-data', JSON.stringify(data));
+              }}
             />
 
             {/* Assessment Questions */}

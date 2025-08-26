@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
-import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 interface PatientData {
   name: string;
@@ -47,7 +47,11 @@ export const useAssessmentStorage = () => {
 
   const saveAssessment = async (submission: AssessmentSubmission) => {
     if (!user) {
-      toast.error('User must be authenticated to save assessments');
+      toast({
+        title: "Authentication required",
+        description: "User must be authenticated to save assessments",
+        variant: "destructive"
+      });
       return null;
     }
 
@@ -68,7 +72,11 @@ export const useAssessmentStorage = () => {
 
       if (assessmentError) {
         console.error('Error saving assessment:', assessmentError);
-        toast.error('Failed to save assessment');
+        toast({
+          title: "Error saving assessment",
+          description: "Failed to save assessment",
+          variant: "destructive"
+        });
         return null;
       }
 
@@ -89,15 +97,26 @@ export const useAssessmentStorage = () => {
 
       if (answersError) {
         console.error('Error saving assessment answers:', answersError);
-        toast.error('Failed to save assessment answers');
+        toast({
+          title: "Error saving answers",
+          description: "Failed to save assessment answers",
+          variant: "destructive"
+        });
         return null;
       }
 
-      toast.success('Assessment saved successfully!');
+      toast({
+        title: "Assessment saved",
+        description: "Assessment saved successfully!"
+      });
       return assessment.id;
     } catch (error) {
       console.error('Unexpected error saving assessment:', error);
-      toast.error('An unexpected error occurred');
+      toast({
+        title: "Unexpected error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -135,7 +154,11 @@ export const useAssessmentStorage = () => {
 
       if (assessmentsError) {
         console.error('Error fetching assessment history:', assessmentsError);
-        toast.error('Failed to load assessment history');
+        toast({
+          title: "Error loading history",
+          description: "Failed to load assessment history",
+          variant: "destructive"
+        });
         return [];
       }
 
@@ -146,7 +169,11 @@ export const useAssessmentStorage = () => {
       }));
     } catch (error) {
       console.error('Unexpected error fetching assessment history:', error);
-      toast.error('An unexpected error occurred');
+      toast({
+        title: "Unexpected error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
       return [];
     } finally {
       setIsLoading(false);
@@ -184,7 +211,11 @@ export const useAssessmentStorage = () => {
 
       if (error) {
         console.error('Error fetching assessment:', error);
-        toast.error('Failed to load assessment');
+        toast({
+          title: "Error loading assessment",
+          description: "Failed to load assessment",
+          variant: "destructive"
+        });
         return null;
       }
 
@@ -194,7 +225,11 @@ export const useAssessmentStorage = () => {
       };
     } catch (error) {
       console.error('Unexpected error fetching assessment:', error);
-      toast.error('An unexpected error occurred');
+      toast({
+        title: "Unexpected error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
       return null;
     } finally {
       setIsLoading(false);
