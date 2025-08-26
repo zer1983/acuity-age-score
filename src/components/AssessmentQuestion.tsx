@@ -83,15 +83,6 @@ export const AssessmentQuestion: React.FC<AssessmentQuestionProps> = ({
             </div>
           ))}
         </RadioGroup>
-
-        {isAnswered && selectedOption && (
-          <div className="mt-4 p-3 bg-primary-light rounded-lg">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-primary font-medium">Selected Score:</span>
-              <span className="font-mono font-bold text-primary">{selectedOption.score}</span>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
