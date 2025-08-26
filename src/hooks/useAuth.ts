@@ -56,7 +56,7 @@ export const useAuth = () => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!isMounted) return;
         
         console.log('Auth state change:', event, session?.user?.id);
@@ -64,15 +64,15 @@ export const useAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Only fetch profile on sign in events or when we have a new user
+        // Set loading to false immediately for auth state changes
+        setLoading(false);
+        
+        // Fetch profile after setting loading to false
         if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          await fetchProfile(session.user.id);
+          fetchProfile(session.user.id);
         } else if (!session) {
           setProfile(null);
         }
-        
-        // Ensure loading is false after auth state changes
-        setLoading(false);
       }
     );
 
