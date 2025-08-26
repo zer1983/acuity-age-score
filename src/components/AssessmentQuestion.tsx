@@ -53,7 +53,7 @@ export const AssessmentQuestion: React.FC<AssessmentQuestionProps> = ({
               <p className="text-sm text-muted-foreground mt-1">{description}</p>
             )}
           </div>
-          <Badge variant="secondary" className="ml-2 text-xs">
+          <Badge variant="secondary" className="text-xs">
             {category}
           </Badge>
         </div>
