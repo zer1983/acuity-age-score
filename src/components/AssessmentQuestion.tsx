@@ -83,16 +83,6 @@ export const AssessmentQuestion: React.FC<AssessmentQuestionProps> = ({
               >
                 {option.label}
               </Label>
-              <Badge 
-                variant={selectedValue === option.value ? "default" : "outline"}
-                className={`text-xs font-mono ${
-                  selectedValue === option.value 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground'
-                }`}
-              >
-                {option.score}
-              </Badge>
             </div>
           ))}
         </RadioGroup>
