@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,7 @@ interface AssessmentAnswer {
 }
 
 export const AssessmentForm: React.FC = () => {
+  const navigate = useNavigate();
   // Load saved data from localStorage on component mount
   const [patientData, setPatientData] = useState<PatientData>(() => {
     const saved = localStorage.getItem('assessment-patient-data');
@@ -128,7 +130,7 @@ export const AssessmentForm: React.FC = () => {
     }, 300); // Wait for transition to complete
   };
 
-  const handleCalculateScore = () => {
+  const handleCalculateScore = async () => {
     if (!isComplete) {
       toast({
         title: "Incomplete Assessment",
@@ -137,11 +139,50 @@ export const AssessmentForm: React.FC = () => {
       });
       return;
     }
+    
     setShowResults(true);
-    toast({
-      title: "Assessment Complete",
-      description: `Total acuity score: ${totalScore}`,
-    });
+    
+    // Auto-save the assessment
+    const assessmentData = {
+      patientData: {
+        name: patientData.name,
+        age: patientData.age as number,
+        gender: patientData.patientId, // Using patientId as gender for now
+      },
+      answers: Object.values(answers).map(answer => {
+        const question = relevantQuestions.find(q => q.id === answer.questionId);
+        const option = question?.options.find(opt => opt.value === answer.value);
+        return {
+          questionId: answer.questionId,
+          questionTitle: question?.title || '',
+          category: question?.category || '',
+          selectedValue: answer.value,
+          selectedLabel: option?.label || '',
+          selectedScore: answer.score,
+        };
+      }),
+      totalScore,
+    };
+
+    const assessmentId = await saveAssessment(assessmentData);
+    if (assessmentId) {
+      // Clear localStorage since we've saved to database
+      localStorage.removeItem('assessment-answers');
+      localStorage.removeItem('assessment-patient-data');
+      
+      toast({
+        title: "Assessment Complete & Saved",
+        description: `Assessment saved successfully! Total score: ${totalScore}`,
+      });
+      
+      // Navigate to summary page
+      navigate(`/assessment/${assessmentId}`);
+    } else {
+      toast({
+        title: "Assessment Complete",
+        description: `Total acuity score: ${totalScore}. Please try saving manually if needed.`,
+      });
+    }
   };
 
   const handleSaveAssessment = async () => {
