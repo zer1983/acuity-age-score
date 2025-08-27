@@ -36,10 +36,10 @@ export const AssessmentQuestion: React.FC<AssessmentQuestionProps> = ({
   const selectedOption = options.find(opt => opt.value === selectedValue);
 
   return (
-    <Card className={`shadow-card-custom transition-all duration-300 border-2 ${
+    <Card className={`shadow-card-custom transition-all duration-300 ${
       isAnswered 
-        ? 'border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/30' 
-        : 'border-border hover:border-primary/30 hover:shadow-lg'
+        ? 'bg-green-50/50 dark:bg-green-950/30' 
+        : 'hover:shadow-lg'
     }`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
