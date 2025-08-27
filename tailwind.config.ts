@@ -128,6 +128,16 @@ export default {
 						transform: 'scale(1)',
 						opacity: '1'
 					}
+				},
+				'moveUp': {
+					'0%': {
+						transform: 'translateY(0) scale(1)',
+						opacity: '1'
+					},
+					'100%': {
+						transform: 'translateY(-20px) scale(0.95)',
+						opacity: '0.7'
+					}
 				}
 			},
 			animation: {

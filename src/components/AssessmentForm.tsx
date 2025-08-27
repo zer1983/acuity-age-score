@@ -95,49 +95,28 @@ export const AssessmentForm: React.FC = () => {
   const totalQuestions = relevantQuestions.length;
   const isComplete = answeredQuestions === totalQuestions && patientData.patientId && patientData.name && patientData.age !== '';
 
-  // Perfect center scrolling with animation timing
+  // Scroll to center the current question perfectly  
   const scrollToQuestion = useCallback((questionId: string) => {
-    // Wait for DOM to settle after state change
     setTimeout(() => {
       const questionElement = questionRefs.current[questionId];
       if (!questionElement) return;
       
-      // Multiple measurement attempts for accuracy
-      const measureAndScroll = (attempts = 0) => {
-        if (attempts > 3) return; // Prevent infinite loop
-        
-        const rect = questionElement.getBoundingClientRect();
-        
-        // If element has no height, wait and retry
-        if (rect.height === 0 && attempts < 3) {
-          setTimeout(() => measureAndScroll(attempts + 1), 50);
-          return;
-        }
-        
-        const viewportHeight = window.innerHeight;
-        const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const elementTop = rect.top + currentScrollTop;
-        
-        // Calculate perfect center position
-        // Target: element center should be at viewport center
-        const targetScrollTop = elementTop - (viewportHeight / 2) + (rect.height / 2);
-        
-        // Add slight offset to show element fully in center with padding
-        const padding = 20;
-        const finalScrollTop = Math.max(0, targetScrollTop - padding);
-        
-        // Smooth scroll to position
-        window.scrollTo({
-          top: finalScrollTop,
-          behavior: 'smooth'
-        });
-      };
+      const rect = questionElement.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const elementTop = rect.top + currentScrollTop;
       
-      measureAndScroll();
-    }, 600); // Wait for 0.5s animation + 0.1s buffer
+      // Calculate center position
+      const targetScrollTop = elementTop - (viewportHeight / 2) + (rect.height / 2);
+      
+      window.scrollTo({
+        top: Math.max(0, targetScrollTop),
+        behavior: 'smooth'
+      });
+    }, 700); // Wait for animations to complete
   }, []);
 
-  // Handle revealing next question
+  // Handle revealing next question and centering
   const revealNextQuestion = useCallback(() => {
     if (showingQuestionIndex < relevantQuestions.length - 1) {
       setIsRevealingQuestion(true);
@@ -146,12 +125,14 @@ export const AssessmentForm: React.FC = () => {
         setShowingQuestionIndex(prev => prev + 1);
         setIsRevealingQuestion(false);
         
-        // Auto-scroll to the new question
-        const nextQuestion = relevantQuestions[showingQuestionIndex + 1];
-        if (nextQuestion) {
-          scrollToQuestion(nextQuestion.id);
-        }
-      }, 250); // Brief delay for chat-like experience
+        // Auto-scroll to center the new question
+        setTimeout(() => {
+          const nextQuestion = relevantQuestions[showingQuestionIndex + 1];
+          if (nextQuestion) {
+            scrollToQuestion(nextQuestion.id);
+          }
+        }, 100);
+      }, 300);
     }
   }, [showingQuestionIndex, relevantQuestions, scrollToQuestion]);
 
@@ -161,13 +142,15 @@ export const AssessmentForm: React.FC = () => {
       [questionId]: { questionId, value, score }
     };
     setAnswers(newAnswers);
-    // Save to localStorage
     localStorage.setItem('assessment-answers', JSON.stringify(newAnswers));
     
     // Check if this was the current question and reveal next
     const questionIndex = relevantQuestions.findIndex(q => q.id === questionId);
     if (questionIndex === showingQuestionIndex && !answers[questionId]) {
-      revealNextQuestion();
+      // Trigger move-up animation and reveal next
+      setTimeout(() => {
+        revealNextQuestion();
+      }, 500); // Wait for move-up animation
     }
   };
 
@@ -371,48 +354,54 @@ export const AssessmentForm: React.FC = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6" ref={containerRef}>
-                  {/* Chat-like question flow */}
-                  <div className="space-y-6">
-                    {questionsToShow.map((question, index) => {
-                      const isAnswered = !!answers[question.id];
-                      const isCurrentQuestion = currentQuestion?.id === question.id;
-                      const isNewQuestion = index === showingQuestionIndex;
-                      
-                      return (
-                        <div
-                          key={question.id}
-                          ref={el => questionRefs.current[question.id] = el}
-                          className={`transform transition-all duration-500 ${
-                            isNewQuestion ? 'opacity-0' : 'opacity-100'
-                          } ${isAnswered ? 'opacity-90' : ''}`}
-                          style={isNewQuestion ? { 
-                            animation: 'fade-in 0.5s ease-out 0.1s forwards, scale-in 0.5s ease-out 0.1s forwards'
-                          } : {}}
-                        >
-                          {/* Category header for first question in category */}
-                          {(index === 0 || question.category !== questionsToShow[index - 1]?.category) && (
-                            <div className="flex items-center gap-3 mb-4">
-                              <MessageCircle className="h-5 w-5 text-primary" />
-                              <h3 className="text-lg font-semibold text-foreground">
-                                {question.category}
-                              </h3>
-                              <div className="flex-1 h-px bg-border"></div>
-                            </div>
-                          )}
-                          
-                          <AssessmentQuestion
-                            id={question.id}
-                            title={question.title}
-                            description={question.description}
-                            options={question.options}
-                            selectedValue={answers[question.id]?.value || ''}
-                            onValueChange={handleAnswerChange}
-                            category={question.category}
-                            isRequired={question.isRequired}
-                          />
-                        </div>
-                      );
-                    })}
+                   {/* Sequential question display with proper centering */}
+                   <div className="space-y-6 relative">
+                     {questionsToShow.map((question, index) => {
+                       const isAnswered = !!answers[question.id];
+                       const isCurrentQuestion = index === showingQuestionIndex && !isAnswered;
+                       const isNewQuestion = index === showingQuestionIndex && !isAnswered;
+                       
+                       return (
+                         <div
+                           key={question.id}
+                           ref={el => questionRefs.current[question.id] = el}
+                           className={`transition-all duration-500 ${
+                             isCurrentQuestion 
+                               ? 'transform scale-105 mx-auto max-w-3xl' 
+                               : isAnswered 
+                                 ? 'transform scale-95 opacity-70' 
+                                 : ''
+                           } ${isNewQuestion ? 'opacity-0' : 'opacity-100'}`}
+                           style={{
+                             ...(isNewQuestion && {
+                               animation: 'fade-in 0.5s ease-out 0.2s forwards, scale-in 0.5s ease-out 0.2s forwards'
+                             })
+                           }}
+                         >
+                           {/* Category header for first question in category */}
+                           {(index === 0 || question.category !== questionsToShow[index - 1]?.category) && (
+                             <div className="flex items-center gap-3 mb-4">
+                               <MessageCircle className="h-5 w-5 text-primary" />
+                               <h3 className="text-lg font-semibold text-foreground">
+                                 {question.category}
+                               </h3>
+                               <div className="flex-1 h-px bg-border"></div>
+                             </div>
+                           )}
+                           
+                           <AssessmentQuestion
+                             id={question.id}
+                             title={question.title}
+                             description={question.description}
+                             options={question.options}
+                             selectedValue={answers[question.id]?.value || ''}
+                             onValueChange={handleAnswerChange}
+                             category={question.category}
+                             isRequired={question.isRequired}
+                           />
+                         </div>
+                       );
+                     })}
                     
                     {/* Loading indicator for next question */}
                     {isRevealingQuestion && showingQuestionIndex < relevantQuestions.length - 1 && (
