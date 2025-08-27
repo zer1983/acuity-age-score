@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,7 @@ import { AssessmentQuestion } from './AssessmentQuestion';
 import { AssessmentResults } from './AssessmentResults';
 import { AssessmentHistory } from './AssessmentHistory';
 import { UserNav } from './UserNav';
-import { ClipboardList, Calculator, Save, RotateCcw, Loader2, History } from 'lucide-react';
+import { ClipboardList, Calculator, Save, RotateCcw, Loader2, History, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAssessmentData } from '@/hooks/useAssessmentData';
 import { useAssessmentStorage } from '@/hooks/useAssessmentStorage';
@@ -61,6 +61,15 @@ export const AssessmentForm: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const [viewMode, setViewMode] = useState<'assessment' | 'history'>('assessment');
   const [assessmentSaved, setAssessmentSaved] = useState(false);
+  
+  // Sequential question display states
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [showingQuestionIndex, setShowingQuestionIndex] = useState(0);
+  const [isRevealingQuestion, setIsRevealingQuestion] = useState(false);
+  
+  // Refs for auto-scroll
+  const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch assessment data from Supabase
   const { questions: allQuestions, categories: availableCategories, loading, error } = useAssessmentData();
@@ -86,6 +95,38 @@ export const AssessmentForm: React.FC = () => {
   const totalQuestions = relevantQuestions.length;
   const isComplete = answeredQuestions === totalQuestions && patientData.patientId && patientData.name && patientData.age !== '';
 
+  // Auto-scroll to question
+  const scrollToQuestion = useCallback((questionId: string) => {
+    setTimeout(() => {
+      const questionElement = questionRefs.current[questionId];
+      if (questionElement) {
+        questionElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }, 100);
+  }, []);
+
+  // Handle revealing next question
+  const revealNextQuestion = useCallback(() => {
+    if (showingQuestionIndex < relevantQuestions.length - 1) {
+      setIsRevealingQuestion(true);
+      
+      setTimeout(() => {
+        setShowingQuestionIndex(prev => prev + 1);
+        setIsRevealingQuestion(false);
+        
+        // Auto-scroll to the new question
+        const nextQuestion = relevantQuestions[showingQuestionIndex + 1];
+        if (nextQuestion) {
+          scrollToQuestion(nextQuestion.id);
+        }
+      }, 250); // Brief delay for chat-like experience
+    }
+  }, [showingQuestionIndex, relevantQuestions, scrollToQuestion]);
+
   const handleAnswerChange = (questionId: string, value: string, score: number) => {
     const newAnswers = {
       ...answers,
@@ -94,6 +135,12 @@ export const AssessmentForm: React.FC = () => {
     setAnswers(newAnswers);
     // Save to localStorage
     localStorage.setItem('assessment-answers', JSON.stringify(newAnswers));
+    
+    // Check if this was the current question and reveal next
+    const questionIndex = relevantQuestions.findIndex(q => q.id === questionId);
+    if (questionIndex === showingQuestionIndex && !answers[questionId]) {
+      revealNextQuestion();
+    }
   };
 
   const handleCalculateScore = () => {
@@ -154,6 +201,9 @@ export const AssessmentForm: React.FC = () => {
     setAnswers({});
     setShowResults(false);
     setAssessmentSaved(false);
+    setCurrentQuestionIndex(0);
+    setShowingQuestionIndex(0);
+    setIsRevealingQuestion(false);
     const resetPatientData: PatientData = { patientId: '', age: '', name: '' };
     setPatientData(resetPatientData);
     
@@ -170,6 +220,24 @@ export const AssessmentForm: React.FC = () => {
   const categories = useMemo(() => {
     return Array.from(new Set(relevantQuestions.map(q => q.category)));
   }, [relevantQuestions]);
+
+  // Initialize showing question index based on existing answers
+  useEffect(() => {
+    if (relevantQuestions.length > 0) {
+      const answeredCount = relevantQuestions.filter(q => answers[q.id]).length;
+      setShowingQuestionIndex(Math.min(answeredCount, relevantQuestions.length - 1));
+    }
+  }, [relevantQuestions, answers]);
+
+  // Get questions to display (up to current showing index)
+  const questionsToShow = useMemo(() => {
+    return relevantQuestions.slice(0, showingQuestionIndex + 1);
+  }, [relevantQuestions, showingQuestionIndex]);
+
+  // Get current unanswered question
+  const currentQuestion = useMemo(() => {
+    return relevantQuestions.find(q => !answers[q.id]);
+  }, [relevantQuestions, answers]);
 
   if (loading) {
     return (
@@ -274,35 +342,73 @@ export const AssessmentForm: React.FC = () => {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {categories.map((category) => (
-                    <div key={category}>
-                      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <div className="w-1 h-6 bg-primary rounded-full"></div>
-                        {category}
-                      </h3>
-                      <div className="grid gap-4">
-                        {relevantQuestions
-                          .filter(q => q.category === category)
-                          .map((question) => (
-                            <AssessmentQuestion
-                              key={question.id}
-                              id={question.id}
-                              title={question.title}
-                              description={question.description}
-                              options={question.options}
-                              selectedValue={answers[question.id]?.value || ''}
-                              onValueChange={handleAnswerChange}
-                              category={question.category}
-                              isRequired={question.isRequired}
-                            />
-                          ))}
+                <CardContent className="space-y-6" ref={containerRef}>
+                  {/* Chat-like question flow */}
+                  <div className="space-y-6">
+                    {questionsToShow.map((question, index) => {
+                      const isAnswered = !!answers[question.id];
+                      const isCurrentQuestion = currentQuestion?.id === question.id;
+                      const isNewQuestion = index === showingQuestionIndex;
+                      
+                      return (
+                        <div
+                          key={question.id}
+                          ref={el => questionRefs.current[question.id] = el}
+                          className={`transform transition-all duration-500 ${
+                            isNewQuestion ? 'animate-fade-in animate-scale-in' : ''
+                          } ${isAnswered ? 'opacity-90' : 'opacity-100'}`}
+                        >
+                          {/* Category header for first question in category */}
+                          {(index === 0 || question.category !== questionsToShow[index - 1]?.category) && (
+                            <div className="flex items-center gap-3 mb-4">
+                              <MessageCircle className="h-5 w-5 text-primary" />
+                              <h3 className="text-lg font-semibold text-foreground">
+                                {question.category}
+                              </h3>
+                              <div className="flex-1 h-px bg-border"></div>
+                            </div>
+                          )}
+                          
+                          <AssessmentQuestion
+                            id={question.id}
+                            title={question.title}
+                            description={question.description}
+                            options={question.options}
+                            selectedValue={answers[question.id]?.value || ''}
+                            onValueChange={handleAnswerChange}
+                            category={question.category}
+                            isRequired={question.isRequired}
+                          />
+                        </div>
+                      );
+                    })}
+                    
+                    {/* Loading indicator for next question */}
+                    {isRevealingQuestion && showingQuestionIndex < relevantQuestions.length - 1 && (
+                      <div className="flex items-center gap-3 p-4 animate-fade-in">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0ms]"></div>
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:150ms]"></div>
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:300ms]"></div>
+                        </div>
+                        <span className="text-sm text-muted-foreground">Preparing next question...</span>
                       </div>
-                      {category !== categories[categories.length - 1] && (
-                        <Separator className="my-6" />
-                      )}
-                    </div>
-                  ))}
+                    )}
+                    
+                    {/* Completion message */}
+                    {showingQuestionIndex >= relevantQuestions.length - 1 && 
+                     answeredQuestions === totalQuestions && (
+                      <div className="text-center p-6 animate-fade-in">
+                        <div className="inline-flex items-center gap-2 text-primary font-medium">
+                          <CheckCircle2 className="h-5 w-5" />
+                          All questions completed!
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          You can now calculate your final assessment score.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             )}

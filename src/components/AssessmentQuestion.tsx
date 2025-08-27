@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Clock } from 'lucide-react';
 
 interface QuestionOption {
   value: string;
@@ -38,14 +38,18 @@ export const AssessmentQuestion: React.FC<AssessmentQuestionProps> = ({
   return (
     <Card className={`shadow-card-custom transition-all duration-300 border-2 ${
       isAnswered 
-        ? 'border-assessment-complete bg-assessment-complete' 
-        : 'border-border hover:border-primary/30'
+        ? 'border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/30' 
+        : 'border-border hover:border-primary/30 hover:shadow-lg'
     }`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              {isAnswered && <CheckCircle2 className="h-4 w-4 text-assessment-complete-foreground" />}
+              {isAnswered ? (
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+              ) : (
+                <Clock className="h-4 w-4 text-orange-500" />
+              )}
               {title}
               {isRequired && <span className="text-destructive">*</span>}
             </CardTitle>
