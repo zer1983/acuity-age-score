@@ -95,36 +95,39 @@ export const AssessmentForm: React.FC = () => {
   const totalQuestions = relevantQuestions.length;
   const isComplete = answeredQuestions === totalQuestions && patientData.patientId && patientData.name && patientData.age !== '';
 
-  // Auto-scroll to question with smooth centering
+  // Auto-scroll to question with complete visibility in center
   const scrollToQuestion = useCallback((questionId: string) => {
     setTimeout(() => {
       const questionElement = questionRefs.current[questionId];
-      if (questionElement && containerRef.current) {
-        // Calculate the center position
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const elementRect = questionElement.getBoundingClientRect();
-        const centerOffset = containerRect.height / 2 - elementRect.height / 2;
-        
+      if (questionElement) {
+        // First scroll to get element in view
         questionElement.scrollIntoView({ 
           behavior: 'smooth', 
           block: 'center',
           inline: 'nearest'
         });
         
-        // Additional smooth centering for better positioning
+        // Then ensure complete visibility with padding
         setTimeout(() => {
+          const elementRect = questionElement.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          const elementHeight = elementRect.height;
+          
+          // Calculate scroll position to center the complete question
           const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          const elementTop = questionElement.getBoundingClientRect().top + scrollTop;
-          const viewportCenter = window.innerHeight / 2;
-          const targetScroll = elementTop - viewportCenter + (elementRect.height / 2);
+          const elementTop = elementRect.top + scrollTop;
+          
+          // Center position with extra padding to ensure full visibility
+          const padding = 40; // Extra space above and below
+          const targetScroll = elementTop - (viewportHeight - elementHeight) / 2 + padding;
           
           window.scrollTo({
-            top: targetScroll,
+            top: Math.max(0, targetScroll),
             behavior: 'smooth'
           });
-        }, 50);
+        }, 100);
       }
-    }, 200);
+    }, 250);
   }, []);
 
   // Handle revealing next question
