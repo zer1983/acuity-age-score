@@ -107,16 +107,18 @@ const AssessmentSummary: React.FC = () => {
   };
 
   const getCategoryScores = () => {
-    if (!assessment) return [];
+    if (!assessment || !assessment.answers || !Array.isArray(assessment.answers)) return [];
     
     const categoryMap = new Map<string, { score: number; count: number }>();
     
     assessment.answers.forEach(answer => {
-      const existing = categoryMap.get(answer.category) || { score: 0, count: 0 };
-      categoryMap.set(answer.category, {
-        score: existing.score + answer.selected_score,
-        count: existing.count + 1
-      });
+      if (answer && answer.category && typeof answer.selected_score === 'number') {
+        const existing = categoryMap.get(answer.category) || { score: 0, count: 0 };
+        categoryMap.set(answer.category, {
+          score: existing.score + answer.selected_score,
+          count: existing.count + 1
+        });
+      }
     });
 
     return Array.from(categoryMap.entries()).map(([category, data]) => {
@@ -174,6 +176,27 @@ const AssessmentSummary: React.FC = () => {
           <CardContent className="py-8 text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
             <p className="text-muted-foreground">Loading assessment summary...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Ensure assessment and answers exist before proceeding
+  if (!assessment.answers || !Array.isArray(assessment.answers)) {
+    return (
+      <div className="min-h-screen bg-gradient-assessment p-4 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="py-8 text-center">
+            <AlertTriangle className="h-8 w-8 mx-auto mb-4 text-red-500" />
+            <h3 className="text-lg font-semibold mb-2">Assessment Data Error</h3>
+            <p className="text-muted-foreground">Unable to load assessment data. Please try again.</p>
+            <Button 
+              onClick={() => navigate('/assessment')} 
+              className="mt-4"
+            >
+              Back to Assessment
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -407,7 +430,7 @@ const AssessmentSummary: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
-              {assessment.answers.map((answer, index) => (
+              {assessment.answers && assessment.answers.map((answer, index) => (
                 <div key={answer.question_id} className="flex items-start justify-between p-4 bg-muted/20 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
