@@ -95,18 +95,36 @@ export const AssessmentForm: React.FC = () => {
   const totalQuestions = relevantQuestions.length;
   const isComplete = answeredQuestions === totalQuestions && patientData.patientId && patientData.name && patientData.age !== '';
 
-  // Auto-scroll to question
+  // Auto-scroll to question with smooth centering
   const scrollToQuestion = useCallback((questionId: string) => {
     setTimeout(() => {
       const questionElement = questionRefs.current[questionId];
-      if (questionElement) {
+      if (questionElement && containerRef.current) {
+        // Calculate the center position
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const elementRect = questionElement.getBoundingClientRect();
+        const centerOffset = containerRect.height / 2 - elementRect.height / 2;
+        
         questionElement.scrollIntoView({ 
           behavior: 'smooth', 
           block: 'center',
           inline: 'nearest'
         });
+        
+        // Additional smooth centering for better positioning
+        setTimeout(() => {
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const elementTop = questionElement.getBoundingClientRect().top + scrollTop;
+          const viewportCenter = window.innerHeight / 2;
+          const targetScroll = elementTop - viewportCenter + (elementRect.height / 2);
+          
+          window.scrollTo({
+            top: targetScroll,
+            behavior: 'smooth'
+          });
+        }, 50);
       }
-    }, 100);
+    }, 200);
   }, []);
 
   // Handle revealing next question
