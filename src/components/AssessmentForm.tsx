@@ -62,11 +62,6 @@ export const AssessmentForm: React.FC = () => {
   const [viewMode, setViewMode] = useState<'assessment' | 'history'>('assessment');
   const [assessmentSaved, setAssessmentSaved] = useState(false);
   
-  // Sequential question display states
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [showingQuestionIndex, setShowingQuestionIndex] = useState(0);
-  const [isRevealingQuestion, setIsRevealingQuestion] = useState(false);
-  
   // Refs for auto-scroll
   const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const containerRef = useRef<HTMLDivElement>(null);
@@ -116,26 +111,6 @@ export const AssessmentForm: React.FC = () => {
     }, 150); // Faster timing for smoother flow
   }, []);
 
-  // Handle revealing next question and centering
-  const revealNextQuestion = useCallback(() => {
-    if (showingQuestionIndex < relevantQuestions.length - 1) {
-      setIsRevealingQuestion(true);
-      
-      setTimeout(() => {
-        setShowingQuestionIndex(prev => prev + 1);
-        setIsRevealingQuestion(false);
-        
-        // Auto-scroll to center the new question
-        setTimeout(() => {
-          const nextQuestion = relevantQuestions[showingQuestionIndex + 1];
-          if (nextQuestion) {
-            scrollToQuestion(nextQuestion.id);
-          }
-        }, 50);
-      }, 100);
-    }
-  }, [showingQuestionIndex, relevantQuestions, scrollToQuestion]);
-
   const handleAnswerChange = (questionId: string, value: string, score: number) => {
     const newAnswers = {
       ...answers,
@@ -144,14 +119,13 @@ export const AssessmentForm: React.FC = () => {
     setAnswers(newAnswers);
     localStorage.setItem('assessment-answers', JSON.stringify(newAnswers));
     
-    // Check if this was the current question and reveal next
-    const questionIndex = relevantQuestions.findIndex(q => q.id === questionId);
-    if (questionIndex === showingQuestionIndex && !answers[questionId]) {
-      // Trigger move-up animation and reveal next
-      setTimeout(() => {
-        revealNextQuestion();
-      }, 200); // Wait for move-up animation
-    }
+    // Find the next unanswered question and scroll to it
+    setTimeout(() => {
+      const nextUnansweredQuestion = relevantQuestions.find(q => !newAnswers[q.id]);
+      if (nextUnansweredQuestion) {
+        scrollToQuestion(nextUnansweredQuestion.id);
+      }
+    }, 300); // Wait for transition to complete
   };
 
   const handleCalculateScore = () => {
@@ -212,9 +186,6 @@ export const AssessmentForm: React.FC = () => {
     setAnswers({});
     setShowResults(false);
     setAssessmentSaved(false);
-    setCurrentQuestionIndex(0);
-    setShowingQuestionIndex(0);
-    setIsRevealingQuestion(false);
     const resetPatientData: PatientData = { patientId: '', age: '', name: '' };
     setPatientData(resetPatientData);
     
@@ -232,18 +203,10 @@ export const AssessmentForm: React.FC = () => {
     return Array.from(new Set(relevantQuestions.map(q => q.category)));
   }, [relevantQuestions]);
 
-  // Initialize showing question index based on existing answers
-  useEffect(() => {
-    if (relevantQuestions.length > 0) {
-      const answeredCount = relevantQuestions.filter(q => answers[q.id]).length;
-      setShowingQuestionIndex(Math.min(answeredCount, relevantQuestions.length - 1));
-    }
-  }, [relevantQuestions, answers]);
-
-  // Get questions to display (up to current showing index)
+  // Show all questions but with different states
   const questionsToShow = useMemo(() => {
-    return relevantQuestions.slice(0, showingQuestionIndex + 1);
-  }, [relevantQuestions, showingQuestionIndex]);
+    return relevantQuestions;
+  }, [relevantQuestions]);
 
   // Get current unanswered question
   const currentQuestion = useMemo(() => {
@@ -358,33 +321,39 @@ export const AssessmentForm: React.FC = () => {
                    <div className="space-y-6 relative">
                      {questionsToShow.map((question, index) => {
                        const isAnswered = !!answers[question.id];
-                       const isCurrentQuestion = index === showingQuestionIndex && !isAnswered;
-                       const isPreviouslyAnswered = isAnswered;
+                       const currentIndex = relevantQuestions.findIndex(q => !answers[q.id]);
+                       const isCurrentQuestion = index === currentIndex;
+                       const isFutureQuestion = index > currentIndex;
                        
                        return (
                          <div
                            key={question.id}
                            ref={el => questionRefs.current[question.id] = el}
-                           className={`transition-all duration-200 ease-out transform ${
+                           className={`transition-all duration-300 ease-out transform ${
                              isCurrentQuestion 
-                               ? 'scale-105 mx-auto max-w-3xl shadow-lg ring-2 ring-primary/20' 
-                               : isPreviouslyAnswered 
-                                 ? 'scale-95 opacity-70 -translate-y-4' 
-                                 : 'scale-100 opacity-100'
+                               ? 'scale-105 mx-auto max-w-3xl shadow-xl ring-2 ring-primary/30 z-10' 
+                               : isAnswered 
+                                 ? 'scale-95 opacity-60 -translate-y-8' 
+                                 : isFutureQuestion
+                                   ? 'scale-90 opacity-30 translate-y-4 pointer-events-none'
+                                   : 'scale-100 opacity-100'
                            }`}
+                           style={{
+                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                           }}
                          >
                            {/* Category header for first question in category */}
                            {(index === 0 || question.category !== questionsToShow[index - 1]?.category) && (
-                             <div className="flex items-center gap-3 mb-4 transition-all duration-200">
-                               <MessageCircle className="h-5 w-5 text-primary transition-colors duration-200" />
-                               <h3 className="text-lg font-semibold text-foreground transition-colors duration-200">
+                             <div className="flex items-center gap-3 mb-4 transition-all duration-300">
+                               <MessageCircle className="h-5 w-5 text-primary transition-colors duration-300" />
+                               <h3 className="text-lg font-semibold text-foreground transition-colors duration-300">
                                  {question.category}
                                </h3>
-                               <div className="flex-1 h-px bg-border transition-colors duration-200"></div>
+                               <div className="flex-1 h-px bg-border transition-colors duration-300"></div>
                              </div>
                            )}
                            
-                           <div className="transition-all duration-200 ease-out">
+                           <div className="transition-all duration-300 ease-out">
                              <AssessmentQuestion
                                id={question.id}
                                title={question.title}
@@ -399,22 +368,9 @@ export const AssessmentForm: React.FC = () => {
                          </div>
                        );
                      })}
-                    
-                     {/* Loading indicator for next question */}
-                     {isRevealingQuestion && showingQuestionIndex < relevantQuestions.length - 1 && (
-                       <div className="flex items-center gap-3 p-4 animate-fade-in">
-                         <div className="flex gap-1">
-                           <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0ms]"></div>
-                           <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:150ms]"></div>
-                           <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:300ms]"></div>
-                         </div>
-                         <span className="text-sm text-muted-foreground">Preparing next question...</span>
-                       </div>
-                     )}
                      
                      {/* Completion message */}
-                     {showingQuestionIndex >= relevantQuestions.length - 1 && 
-                      answeredQuestions === totalQuestions && (
+                     {answeredQuestions === totalQuestions && (
                        <div className="text-center p-6 animate-fade-in">
                          <div className="inline-flex items-center gap-2 text-primary font-medium">
                            <CheckCircle2 className="h-5 w-5" />
