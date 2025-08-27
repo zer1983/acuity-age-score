@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, Calendar, User, Trophy } from 'lucide-react';
+import { ChevronDown, ChevronUp, Calendar, User, Trophy, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAssessmentStorage } from '@/hooks/useAssessmentStorage';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -29,6 +30,7 @@ export const AssessmentHistory: React.FC = () => {
   const [assessments, setAssessments] = useState<SavedAssessment[]>([]);
   const [expandedAssessment, setExpandedAssessment] = useState<string | null>(null);
   const { getAssessmentHistory, isLoading } = useAssessmentStorage();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadAssessmentHistory();
@@ -65,6 +67,11 @@ export const AssessmentHistory: React.FC = () => {
     }, {} as Record<string, typeof answers>);
     
     return Object.entries(grouped);
+  };
+
+  const handleEditAssessment = (e: React.MouseEvent, assessmentId: string) => {
+    e.stopPropagation();
+    navigate(`/assessment?edit=${assessmentId}`);
   };
 
   if (isLoading && assessments.length === 0) {
@@ -142,6 +149,15 @@ export const AssessmentHistory: React.FC = () => {
                       <div className="text-sm text-muted-foreground">
                         {formatDate(assessment.assessment_date)}
                       </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => handleEditAssessment(e, assessment.id)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       
                       {expandedAssessment === assessment.id ? (
                         <ChevronUp className="h-4 w-4" />

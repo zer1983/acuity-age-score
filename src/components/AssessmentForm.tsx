@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +45,10 @@ interface AssessmentAnswer {
 
 export const AssessmentForm: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editAssessmentId = searchParams.get('edit');
+  const [isEditMode, setIsEditMode] = useState(!!editAssessmentId);
+  
   // Load saved data from localStorage on component mount
   const [patientData, setPatientData] = useState<PatientData>(() => {
     const saved = localStorage.getItem('assessment-patient-data');
@@ -71,7 +75,7 @@ export const AssessmentForm: React.FC = () => {
   // Fetch assessment data from Supabase
   const { questions: allQuestions, categories: availableCategories, loading, error } = useAssessmentData();
   const { profile } = useAuth();
-  const { saveAssessment, isLoading: isSaving } = useAssessmentStorage();
+  const { saveAssessment, updateAssessment, getAssessmentById, isLoading: isSaving } = useAssessmentStorage();
 
   const relevantQuestions = useMemo(() => {
     if (patientData.age === '') return allQuestions.filter(q => q.ageGroup === 'all');
@@ -91,6 +95,41 @@ export const AssessmentForm: React.FC = () => {
   const answeredQuestions = Object.keys(answers).length;
   const totalQuestions = relevantQuestions.length;
   const isComplete = answeredQuestions === totalQuestions && patientData.patientId && patientData.name && patientData.age !== '';
+
+  // Load existing assessment data for edit mode
+  useEffect(() => {
+    const loadAssessmentForEdit = async () => {
+      if (editAssessmentId && isEditMode) {
+        const assessment = await getAssessmentById(editAssessmentId);
+        if (assessment) {
+          // Load patient data
+          setPatientData({
+            patientId: assessment.patient_gender,
+            age: assessment.patient_age,
+            name: assessment.patient_name
+          });
+
+          // Load answers
+          const loadedAnswers: Record<string, AssessmentAnswer> = {};
+          assessment.answers.forEach(answer => {
+            loadedAnswers[answer.question_id] = {
+              questionId: answer.question_id,
+              value: answer.selected_value,
+              score: answer.selected_score
+            };
+          });
+          setAnswers(loadedAnswers);
+          
+          toast({
+            title: "Assessment Loaded",
+            description: "Assessment data loaded for editing"
+          });
+        }
+      }
+    };
+
+    loadAssessmentForEdit();
+  }, [editAssessmentId, isEditMode, getAssessmentById]);
 
   // Scroll to center the current question perfectly  
   const scrollToQuestion = useCallback((questionId: string) => {
@@ -164,24 +203,43 @@ export const AssessmentForm: React.FC = () => {
       totalScore,
     };
 
-    const assessmentId = await saveAssessment(assessmentData);
-    if (assessmentId) {
-      // Clear localStorage since we've saved to database
-      localStorage.removeItem('assessment-answers');
-      localStorage.removeItem('assessment-patient-data');
-      
-      toast({
-        title: "Assessment Complete & Saved",
-        description: `Assessment saved successfully! Total score: ${totalScore}`,
-      });
-      
-      // Navigate to summary page
-      navigate(`/assessment/${assessmentId}`);
+    if (isEditMode && editAssessmentId) {
+      // Update existing assessment
+      const success = await updateAssessment(editAssessmentId, assessmentData);
+      if (success) {
+        // Clear localStorage since we've updated the database
+        localStorage.removeItem('assessment-answers');
+        localStorage.removeItem('assessment-patient-data');
+        
+        toast({
+          title: "Assessment Updated & Saved",
+          description: `Assessment updated successfully! Total score: ${totalScore}`,
+        });
+        
+        // Navigate to summary page
+        navigate(`/assessment/${editAssessmentId}`);
+      }
     } else {
-      toast({
-        title: "Assessment Complete",
-        description: `Total acuity score: ${totalScore}. Please try saving manually if needed.`,
-      });
+      // Create new assessment
+      const assessmentId = await saveAssessment(assessmentData);
+      if (assessmentId) {
+        // Clear localStorage since we've saved to database
+        localStorage.removeItem('assessment-answers');
+        localStorage.removeItem('assessment-patient-data');
+        
+        toast({
+          title: "Assessment Complete & Saved",
+          description: `Assessment saved successfully! Total score: ${totalScore}`,
+        });
+        
+        // Navigate to summary page
+        navigate(`/assessment/${assessmentId}`);
+      } else {
+        toast({
+          title: "Assessment Complete",
+          description: `Total acuity score: ${totalScore}. Please try saving manually if needed.`,
+        });
+      }
     }
   };
 
@@ -233,6 +291,10 @@ export const AssessmentForm: React.FC = () => {
     // Clear localStorage
     localStorage.removeItem('assessment-answers');
     localStorage.removeItem('assessment-patient-data');
+    
+    // Exit edit mode
+    setIsEditMode(false);
+    navigate('/assessment', { replace: true });
     
     toast({
       title: "Assessment Reset",

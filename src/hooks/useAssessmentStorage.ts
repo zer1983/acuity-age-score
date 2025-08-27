@@ -236,8 +236,103 @@ export const useAssessmentStorage = () => {
     }
   };
 
+  const updateAssessment = async (assessmentId: string, submission: AssessmentSubmission) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "User must be authenticated to update assessments",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    setIsLoading(true);
+    try {
+      // Update the assessment record
+      const { error: assessmentError } = await supabase
+        .from('assessments')
+        .update({
+          patient_name: submission.patientData.name,
+          patient_age: submission.patientData.age,
+          patient_gender: submission.patientData.gender,
+          total_score: submission.totalScore,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', assessmentId)
+        .eq('user_id', user.id);
+
+      if (assessmentError) {
+        console.error('Error updating assessment:', assessmentError);
+        toast({
+          title: "Error updating assessment",
+          description: "Failed to update assessment",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Delete existing answers
+      const { error: deleteError } = await supabase
+        .from('assessment_answers')
+        .delete()
+        .eq('assessment_id', assessmentId);
+
+      if (deleteError) {
+        console.error('Error deleting old answers:', deleteError);
+        toast({
+          title: "Error updating answers",
+          description: "Failed to update assessment answers",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Insert new answers
+      const answersToInsert = submission.answers.map(answer => ({
+        assessment_id: assessmentId,
+        question_id: answer.questionId,
+        question_title: answer.questionTitle,
+        category: answer.category,
+        selected_value: answer.selectedValue,
+        selected_label: answer.selectedLabel,
+        selected_score: answer.selectedScore,
+      }));
+
+      const { error: answersError } = await supabase
+        .from('assessment_answers')
+        .insert(answersToInsert);
+
+      if (answersError) {
+        console.error('Error saving new answers:', answersError);
+        toast({
+          title: "Error updating answers",
+          description: "Failed to save updated answers",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      toast({
+        title: "Assessment updated",
+        description: "Assessment updated successfully!"
+      });
+      return true;
+    } catch (error) {
+      console.error('Unexpected error updating assessment:', error);
+      toast({
+        title: "Unexpected error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     saveAssessment,
+    updateAssessment,
     getAssessmentHistory,
     getAssessmentById,
     isLoading,
