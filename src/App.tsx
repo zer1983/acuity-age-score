@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Assessment from "./pages/Assessment";
 import AssessmentSummary from "./pages/AssessmentSummary";
 import NotFound from "./pages/NotFound";
 
@@ -24,6 +25,11 @@ const App = () => (
             <Route path="/" element={
               <AuthGuard>
                 <Index />
+              </AuthGuard>
+            } />
+            <Route path="/assessment" element={
+              <AuthGuard>
+                <Assessment />
               </AuthGuard>
             } />
             <Route path="/assessment/:assessmentId" element={

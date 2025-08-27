@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, Calendar, User, Trophy, Edit } from 'lucide-react';
+import { ChevronDown, ChevronUp, Calendar, User, Trophy, Edit, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAssessmentStorage } from '@/hooks/useAssessmentStorage';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -106,12 +106,21 @@ export const AssessmentHistory: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Calendar className="h-6 w-6" />
-        <h2 className="text-2xl font-bold">Assessment History</h2>
-        <Badge variant="secondary" className="ml-2">
-          {assessments.length} {assessments.length === 1 ? 'Assessment' : 'Assessments'}
-        </Badge>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-6 w-6" />
+          <h2 className="text-2xl font-bold">Assessment History</h2>
+          <Badge variant="secondary" className="ml-2">
+            {assessments.length} {assessments.length === 1 ? 'Assessment' : 'Assessments'}
+          </Badge>
+        </div>
+        <Button
+          onClick={() => navigate('/assessment')}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          New Assessment
+        </Button>
       </div>
 
       <div className="space-y-4">

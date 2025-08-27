@@ -22,7 +22,7 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/assessment');
     }
   }, [isAuthenticated, navigate]);
 
@@ -50,7 +50,7 @@ const Auth = () => {
         description: "You have successfully signed in.",
       });
       
-      navigate('/');
+      navigate('/assessment');
     } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
