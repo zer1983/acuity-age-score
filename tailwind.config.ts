@@ -143,9 +143,10 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in': 'fade-in 0.5s ease-out',
-				'scale-in': 'scale-in 0.5s ease-out',
-				'question-enter': 'fade-in 0.5s ease-out, scale-in 0.5s ease-out'
+				'fade-in': 'fade-in 0.3s ease-out',
+				'scale-in': 'scale-in 0.3s ease-out',
+				'question-enter': 'fade-in 0.3s ease-out, scale-in 0.3s ease-out',
+				'moveUp': 'moveUp 0.3s ease-out'
 			}
 		}
 	},

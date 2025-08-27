@@ -113,7 +113,7 @@ export const AssessmentForm: React.FC = () => {
         top: Math.max(0, targetScrollTop),
         behavior: 'smooth'
       });
-    }, 700); // Wait for animations to complete
+    }, 400); // Faster timing for smoother flow
   }, []);
 
   // Handle revealing next question and centering
@@ -131,8 +131,8 @@ export const AssessmentForm: React.FC = () => {
           if (nextQuestion) {
             scrollToQuestion(nextQuestion.id);
           }
-        }, 100);
-      }, 300);
+        }, 50);
+      }, 200);
     }
   }, [showingQuestionIndex, relevantQuestions, scrollToQuestion]);
 
@@ -150,7 +150,7 @@ export const AssessmentForm: React.FC = () => {
       // Trigger move-up animation and reveal next
       setTimeout(() => {
         revealNextQuestion();
-      }, 500); // Wait for move-up animation
+      }, 300); // Wait for move-up animation
     }
   };
 
@@ -354,7 +354,7 @@ export const AssessmentForm: React.FC = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6" ref={containerRef}>
-                   {/* Sequential question display with proper centering */}
+                   {/* Sequential question display with smooth transitions for all cards */}
                    <div className="space-y-6 relative">
                      {questionsToShow.map((question, index) => {
                        const isAnswered = !!answers[question.id];
@@ -365,40 +365,43 @@ export const AssessmentForm: React.FC = () => {
                          <div
                            key={question.id}
                            ref={el => questionRefs.current[question.id] = el}
-                           className={`transition-all duration-500 ${
+                           className={`transition-all duration-300 ease-out transform ${
                              isCurrentQuestion 
-                               ? 'transform scale-105 mx-auto max-w-3xl' 
+                               ? 'scale-105 mx-auto max-w-3xl shadow-elevated' 
                                : isAnswered 
-                                 ? 'transform scale-95 opacity-70' 
-                                 : ''
-                           } ${isNewQuestion ? 'opacity-0' : 'opacity-100'}`}
+                                 ? 'scale-95 opacity-60 translate-y-2' 
+                                 : 'scale-100 opacity-100'
+                           } ${isNewQuestion ? 'opacity-0' : ''}`}
                            style={{
                              ...(isNewQuestion && {
-                               animation: 'fade-in 0.5s ease-out 0.2s forwards, scale-in 0.5s ease-out 0.2s forwards'
-                             })
+                               animation: 'fade-in 0.3s ease-out 0.1s forwards, scale-in 0.3s ease-out 0.1s forwards'
+                             }),
+                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                            }}
                          >
                            {/* Category header for first question in category */}
                            {(index === 0 || question.category !== questionsToShow[index - 1]?.category) && (
-                             <div className="flex items-center gap-3 mb-4">
-                               <MessageCircle className="h-5 w-5 text-primary" />
-                               <h3 className="text-lg font-semibold text-foreground">
+                             <div className="flex items-center gap-3 mb-4 transition-all duration-300">
+                               <MessageCircle className="h-5 w-5 text-primary transition-colors duration-300" />
+                               <h3 className="text-lg font-semibold text-foreground transition-colors duration-300">
                                  {question.category}
                                </h3>
-                               <div className="flex-1 h-px bg-border"></div>
+                               <div className="flex-1 h-px bg-border transition-colors duration-300"></div>
                              </div>
                            )}
                            
-                           <AssessmentQuestion
-                             id={question.id}
-                             title={question.title}
-                             description={question.description}
-                             options={question.options}
-                             selectedValue={answers[question.id]?.value || ''}
-                             onValueChange={handleAnswerChange}
-                             category={question.category}
-                             isRequired={question.isRequired}
-                           />
+                           <div className="transition-all duration-300 ease-out">
+                             <AssessmentQuestion
+                               id={question.id}
+                               title={question.title}
+                               description={question.description}
+                               options={question.options}
+                               selectedValue={answers[question.id]?.value || ''}
+                               onValueChange={handleAnswerChange}
+                               category={question.category}
+                               isRequired={question.isRequired}
+                             />
+                           </div>
                          </div>
                        );
                      })}
