@@ -47,12 +47,6 @@ const AssessmentSummary: React.FC = () => {
   const { profile } = useAuth();
   const [assessment, setAssessment] = useState<SavedAssessment | null>(null);
 
-  useEffect(() => {
-    if (assessmentId) {
-      loadAssessment();
-    }
-  }, [assessmentId, loadAssessment]);
-
   const loadAssessment = useCallback(async () => {
     if (!assessmentId) return;
     
@@ -66,7 +60,7 @@ const AssessmentSummary: React.FC = () => {
           description: "The requested assessment could not be loaded.",
           variant: "destructive"
         });
-        navigate('/');
+        navigate('/assessment');
       }
     } catch (error) {
       console.error('Error loading assessment:', error);
@@ -75,9 +69,15 @@ const AssessmentSummary: React.FC = () => {
         description: "An error occurred while loading the assessment.",
         variant: "destructive"
       });
-      navigate('/');
+      navigate('/assessment');
     }
   }, [assessmentId, getAssessmentById, navigate]);
+
+  useEffect(() => {
+    if (assessmentId) {
+      loadAssessment();
+    }
+  }, [assessmentId, loadAssessment]);
 
   const getScoreInterpretation = (score: number) => {
     if (score <= 3) return { 
