@@ -95,39 +95,36 @@ export const AssessmentForm: React.FC = () => {
   const totalQuestions = relevantQuestions.length;
   const isComplete = answeredQuestions === totalQuestions && patientData.patientId && patientData.name && patientData.age !== '';
 
-  // Auto-scroll to question with complete visibility in center
+  // Reliable auto-scroll to center question perfectly
   const scrollToQuestion = useCallback((questionId: string) => {
-    setTimeout(() => {
-      const questionElement = questionRefs.current[questionId];
-      if (questionElement) {
-        // First scroll to get element in view
-        questionElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center',
-          inline: 'nearest'
-        });
-        
-        // Then ensure complete visibility with padding
-        setTimeout(() => {
+    // Use requestAnimationFrame for better timing
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const questionElement = questionRefs.current[questionId];
+        if (questionElement) {
+          // Get current positions
           const elementRect = questionElement.getBoundingClientRect();
           const viewportHeight = window.innerHeight;
-          const elementHeight = elementRect.height;
           
-          // Calculate scroll position to center the complete question
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          const elementTop = elementRect.top + scrollTop;
+          // Calculate exact center position
+          const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const elementTopRelativeToDocument = elementRect.top + currentScrollTop;
           
-          // Center position with extra padding to ensure full visibility
-          const padding = 40; // Extra space above and below
-          const targetScroll = elementTop - (viewportHeight - elementHeight) / 2 + padding;
+          // Target: center of viewport minus half element height
+          const targetScrollTop = elementTopRelativeToDocument - (viewportHeight / 2) + (elementRect.height / 2);
           
+          // Ensure we don't scroll past document boundaries
+          const maxScroll = document.documentElement.scrollHeight - viewportHeight;
+          const finalScrollTop = Math.max(0, Math.min(targetScrollTop, maxScroll));
+          
+          // Smooth scroll to exact position
           window.scrollTo({
-            top: Math.max(0, targetScroll),
+            top: finalScrollTop,
             behavior: 'smooth'
           });
-        }, 100);
-      }
-    }, 250);
+        }
+      }, 100);
+    });
   }, []);
 
   // Handle revealing next question
