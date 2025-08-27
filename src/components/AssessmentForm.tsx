@@ -329,15 +329,15 @@ export const AssessmentForm: React.FC = () => {
                          <div
                            key={question.id}
                            ref={el => questionRefs.current[question.id] = el}
-                           className={`transition-all duration-300 ease-out transform ${
-                             isCurrentQuestion 
-                               ? 'scale-105 mx-auto max-w-3xl shadow-xl ring-2 ring-primary/30 z-10' 
-                               : isAnswered 
-                                 ? 'scale-95 opacity-60 -translate-y-8' 
-                                 : isFutureQuestion
-                                   ? 'scale-90 opacity-30 translate-y-4 pointer-events-none'
-                                   : 'scale-100 opacity-100'
-                           }`}
+                            className={`transition-all duration-300 ease-out transform ${
+                              isCurrentQuestion 
+                                ? 'scale-105 mx-auto max-w-3xl shadow-xl z-10' 
+                                : isAnswered 
+                                  ? 'scale-95 opacity-60 -translate-y-8' 
+                                  : isFutureQuestion
+                                    ? 'scale-90 opacity-30 translate-y-4 pointer-events-none'
+                                    : 'scale-100 opacity-100'
+                            }`}
                            style={{
                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                            }}
