@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Calendar, Hash, VenusMars } from 'lucide-react';
+import { User, Calendar, Hash, Users } from 'lucide-react';
 
 interface PatientDemographicsProps {
   patientData: {
@@ -90,7 +90,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="gender" className="flex items-center gap-2 text-sm font-medium">
-              <VenusMars className="h-4 w-4" />
+              <Users className="h-4 w-4" />
               Gender
             </Label>
             <Select

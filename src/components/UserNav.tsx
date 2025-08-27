@@ -36,7 +36,7 @@ export const UserNav: React.FC = () => {
       });
       
       navigate('/auth');
-    } catch (error) {
+    } catch {
       toast({
         title: "Error signing out",
         description: "An unexpected error occurred.",

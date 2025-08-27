@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,12 +34,12 @@ export const AssessmentHistory: React.FC = () => {
 
   useEffect(() => {
     loadAssessmentHistory();
-  }, []);
+  }, [loadAssessmentHistory]);
 
-  const loadAssessmentHistory = async () => {
+  const loadAssessmentHistory = useCallback(async () => {
     const history = await getAssessmentHistory();
     setAssessments(history);
-  };
+  }, [getAssessmentHistory]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

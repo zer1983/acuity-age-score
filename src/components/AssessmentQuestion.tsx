@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+
 import { CheckCircle2, Clock } from 'lucide-react';
 
 interface QuestionOption {
@@ -18,7 +18,6 @@ interface AssessmentQuestionProps {
   options: QuestionOption[];
   selectedValue: string;
   onValueChange: (questionId: string, value: string, score: number) => void;
-  category: string;
   isRequired?: boolean;
 }
 
@@ -29,11 +28,10 @@ export const AssessmentQuestion: React.FC<AssessmentQuestionProps> = ({
   options,
   selectedValue,
   onValueChange,
-  category,
   isRequired = true
 }) => {
   const isAnswered = selectedValue !== '';
-  const selectedOption = options.find(opt => opt.value === selectedValue);
+
 
   return (
     <Card className={`shadow-card-custom transition-all duration-300 border-0 ${

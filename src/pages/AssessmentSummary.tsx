@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,9 +51,9 @@ const AssessmentSummary: React.FC = () => {
     if (assessmentId) {
       loadAssessment();
     }
-  }, [assessmentId]);
+  }, [assessmentId, loadAssessment]);
 
-  const loadAssessment = async () => {
+  const loadAssessment = useCallback(async () => {
     if (!assessmentId) return;
     
     try {
@@ -77,7 +77,7 @@ const AssessmentSummary: React.FC = () => {
       });
       navigate('/');
     }
-  };
+  }, [assessmentId, getAssessmentById, navigate]);
 
   const getScoreInterpretation = (score: number) => {
     if (score <= 3) return { 

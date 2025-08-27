@@ -4,7 +4,7 @@ import { useCallback, useRef } from 'react';
  * A hook that memoizes a callback function and only updates it when dependencies change.
  * This is useful for preventing unnecessary re-renders of child components.
  */
-export function useMemoizedCallback<T extends (...args: any[]) => any>(
+export function useMemoizedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   dependencies: React.DependencyList
 ): T {
@@ -26,7 +26,7 @@ export function useMemoizedCallback<T extends (...args: any[]) => any>(
  */
 export function useMemoizedValue<T>(
   value: T,
-  dependencies: React.DependencyList
+  _dependencies: React.DependencyList
 ): T {
   const ref = useRef<T>(value);
   

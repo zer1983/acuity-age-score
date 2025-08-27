@@ -1,9 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { PatientDemographics } from './PatientDemographics';
 import { AssessmentQuestion } from './AssessmentQuestion';
 import { AssessmentResults } from './AssessmentResults';
@@ -13,24 +12,12 @@ import { ClipboardList, Calculator, Save, RotateCcw, Loader2, History, MessageCi
 import { toast } from '@/hooks/use-toast';
 import { useAssessmentData } from '@/hooks/useAssessmentData';
 import { useAssessmentStorage } from '@/hooks/useAssessmentStorage';
-import { useAuth } from '@/contexts/AuthContext';
+
 import { ErrorHandler } from '@/lib/error-handler';
 
-interface QuestionOption {
-  value: string;
-  label: string;
-  score: number;
-}
 
-interface AssessmentQuestionData {
-  id: string;
-  title: string;
-  description?: string;
-  options: QuestionOption[];
-  category: string;
-  ageGroup: 'all' | 'pediatric' | 'adult';
-  isRequired?: boolean;
-}
+
+
 
 interface PatientData {
   patientId: string;
@@ -70,15 +57,14 @@ export const AssessmentForm: React.FC = () => {
   
   const [showResults, setShowResults] = useState(false);
   const [viewMode, setViewMode] = useState<'assessment' | 'history'>('assessment');
-  const [assessmentSaved, setAssessmentSaved] = useState(false);
+
   
   // Refs for auto-scroll
   const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch assessment data from Supabase
-  const { questions: allQuestions, categories: availableCategories, loading, error } = useAssessmentData();
-  const { profile } = useAuth();
+  const { questions: allQuestions, loading, error } = useAssessmentData();
   const { saveAssessment, updateAssessment, getAssessmentById, isLoading: isSaving } = useAssessmentStorage();
 
   const relevantQuestions = useMemo(() => {
@@ -492,7 +478,7 @@ export const AssessmentForm: React.FC = () => {
 
             {/* Assessment Questions */}
             <div ref={containerRef} className="space-y-6">
-              {relevantQuestions.map((question, index) => (
+              {relevantQuestions.map((question) => (
                 <div
                   key={question.id}
                   ref={(el) => (questionRefs.current[question.id] = el)}

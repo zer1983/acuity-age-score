@@ -51,7 +51,7 @@ const Auth = () => {
       });
       
       navigate('/');
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -95,7 +95,7 @@ const Auth = () => {
       
       // Clear form
       setSignUpData({ email: '', password: '', fullName: '', confirmPassword: '' });
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

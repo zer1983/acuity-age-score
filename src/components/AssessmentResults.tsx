@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, User, Calendar, Hash, Download, AlertTriangle, CheckCircle } from 'lucide-react';
+import { TrendingUp, User, Calendar, Hash, Download, CheckCircle } from 'lucide-react';
 
 interface QuestionOption {
   value: string;
