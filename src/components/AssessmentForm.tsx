@@ -113,7 +113,7 @@ export const AssessmentForm: React.FC = () => {
         top: Math.max(0, targetScrollTop),
         behavior: 'smooth'
       });
-    }, 400); // Faster timing for smoother flow
+    }, 150); // Faster timing for smoother flow
   }, []);
 
   // Handle revealing next question and centering
@@ -132,7 +132,7 @@ export const AssessmentForm: React.FC = () => {
             scrollToQuestion(nextQuestion.id);
           }
         }, 50);
-      }, 200);
+      }, 100);
     }
   }, [showingQuestionIndex, relevantQuestions, scrollToQuestion]);
 
@@ -150,7 +150,7 @@ export const AssessmentForm: React.FC = () => {
       // Trigger move-up animation and reveal next
       setTimeout(() => {
         revealNextQuestion();
-      }, 300); // Wait for move-up animation
+      }, 200); // Wait for move-up animation
     }
   };
 
@@ -359,38 +359,32 @@ export const AssessmentForm: React.FC = () => {
                      {questionsToShow.map((question, index) => {
                        const isAnswered = !!answers[question.id];
                        const isCurrentQuestion = index === showingQuestionIndex && !isAnswered;
-                       const isNewQuestion = index === showingQuestionIndex && !isAnswered;
+                       const isPreviouslyAnswered = isAnswered;
                        
                        return (
                          <div
                            key={question.id}
                            ref={el => questionRefs.current[question.id] = el}
-                           className={`transition-all duration-300 ease-out transform ${
+                           className={`transition-all duration-200 ease-out transform ${
                              isCurrentQuestion 
-                               ? 'scale-105 mx-auto max-w-3xl shadow-elevated' 
-                               : isAnswered 
-                                 ? 'scale-95 opacity-60 translate-y-2' 
+                               ? 'scale-105 mx-auto max-w-3xl shadow-lg ring-2 ring-primary/20' 
+                               : isPreviouslyAnswered 
+                                 ? 'scale-95 opacity-70 -translate-y-4' 
                                  : 'scale-100 opacity-100'
-                           } ${isNewQuestion ? 'opacity-0' : ''}`}
-                           style={{
-                             ...(isNewQuestion && {
-                               animation: 'fade-in 0.3s ease-out 0.1s forwards, scale-in 0.3s ease-out 0.1s forwards'
-                             }),
-                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                           }}
+                           }`}
                          >
                            {/* Category header for first question in category */}
                            {(index === 0 || question.category !== questionsToShow[index - 1]?.category) && (
-                             <div className="flex items-center gap-3 mb-4 transition-all duration-300">
-                               <MessageCircle className="h-5 w-5 text-primary transition-colors duration-300" />
-                               <h3 className="text-lg font-semibold text-foreground transition-colors duration-300">
+                             <div className="flex items-center gap-3 mb-4 transition-all duration-200">
+                               <MessageCircle className="h-5 w-5 text-primary transition-colors duration-200" />
+                               <h3 className="text-lg font-semibold text-foreground transition-colors duration-200">
                                  {question.category}
                                </h3>
-                               <div className="flex-1 h-px bg-border transition-colors duration-300"></div>
+                               <div className="flex-1 h-px bg-border transition-colors duration-200"></div>
                              </div>
                            )}
                            
-                           <div className="transition-all duration-300 ease-out">
+                           <div className="transition-all duration-200 ease-out">
                              <AssessmentQuestion
                                id={question.id}
                                title={question.title}
@@ -406,32 +400,32 @@ export const AssessmentForm: React.FC = () => {
                        );
                      })}
                     
-                    {/* Loading indicator for next question */}
-                    {isRevealingQuestion && showingQuestionIndex < relevantQuestions.length - 1 && (
-                      <div className="flex items-center gap-3 p-4 animate-fade-in">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0ms]"></div>
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:150ms]"></div>
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:300ms]"></div>
-                        </div>
-                        <span className="text-sm text-muted-foreground">Preparing next question...</span>
-                      </div>
-                    )}
-                    
-                    {/* Completion message */}
-                    {showingQuestionIndex >= relevantQuestions.length - 1 && 
-                     answeredQuestions === totalQuestions && (
-                      <div className="text-center p-6 animate-fade-in">
-                        <div className="inline-flex items-center gap-2 text-primary font-medium">
-                          <CheckCircle2 className="h-5 w-5" />
-                          All questions completed!
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          You can now calculate your final assessment score.
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                     {/* Loading indicator for next question */}
+                     {isRevealingQuestion && showingQuestionIndex < relevantQuestions.length - 1 && (
+                       <div className="flex items-center gap-3 p-4 animate-fade-in">
+                         <div className="flex gap-1">
+                           <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0ms]"></div>
+                           <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:150ms]"></div>
+                           <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:300ms]"></div>
+                         </div>
+                         <span className="text-sm text-muted-foreground">Preparing next question...</span>
+                       </div>
+                     )}
+                     
+                     {/* Completion message */}
+                     {showingQuestionIndex >= relevantQuestions.length - 1 && 
+                      answeredQuestions === totalQuestions && (
+                       <div className="text-center p-6 animate-fade-in">
+                         <div className="inline-flex items-center gap-2 text-primary font-medium">
+                           <CheckCircle2 className="h-5 w-5" />
+                           All questions completed!
+                         </div>
+                         <p className="text-sm text-muted-foreground mt-2">
+                           You can now calculate your final assessment score.
+                         </p>
+                       </div>
+                     )}
+                   </div>
                 </CardContent>
               </Card>
             )}
