@@ -3,15 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Calendar, Hash } from 'lucide-react';
+import { User, Calendar, Hash, VenusMars } from 'lucide-react';
 
 interface PatientDemographicsProps {
   patientData: {
     patientId: string;
     age: number | '';
     name: string;
+    gender?: string;
   };
-  onPatientDataChange: (data: { patientId: string; age: number | ''; name: string }) => void;
+  onPatientDataChange: (data: { patientId: string; age: number | ''; name: string; gender?: string }) => void;
 }
 
 export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
@@ -41,7 +42,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label htmlFor="patientId" className="flex items-center gap-2 text-sm font-medium">
               <Hash className="h-4 w-4" />
@@ -85,6 +86,27 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
               onChange={(e) => handleChange('age', e.target.value ? parseInt(e.target.value) : '')}
               className="transition-all duration-200 focus:shadow-medical"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="gender" className="flex items-center gap-2 text-sm font-medium">
+              <VenusMars className="h-4 w-4" />
+              Gender
+            </Label>
+            <Select
+              value={patientData.gender || ''}
+              onValueChange={(value) => handleChange('gender', value)}
+            >
+              <SelectTrigger className="transition-all duration-200 focus:shadow-medical">
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         
