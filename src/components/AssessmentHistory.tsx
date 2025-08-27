@@ -32,14 +32,14 @@ export const AssessmentHistory: React.FC = () => {
   const { getAssessmentHistory, isLoading } = useAssessmentStorage();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadAssessmentHistory();
-  }, [loadAssessmentHistory]);
-
   const loadAssessmentHistory = useCallback(async () => {
     const history = await getAssessmentHistory();
     setAssessments(history);
   }, [getAssessmentHistory]);
+
+  useEffect(() => {
+    loadAssessmentHistory();
+  }, [loadAssessmentHistory]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
