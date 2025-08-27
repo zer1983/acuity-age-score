@@ -36,7 +36,7 @@ export const AssessmentQuestion: React.FC<AssessmentQuestionProps> = ({
   const selectedOption = options.find(opt => opt.value === selectedValue);
 
   return (
-    <Card className={`shadow-card-custom transition-all duration-300 ${
+    <Card className={`shadow-card-custom transition-all duration-300 border-0 ${
       isAnswered 
         ? 'bg-green-50/50 dark:bg-green-950/30' 
         : 'hover:shadow-lg'
