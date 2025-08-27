@@ -95,36 +95,46 @@ export const AssessmentForm: React.FC = () => {
   const totalQuestions = relevantQuestions.length;
   const isComplete = answeredQuestions === totalQuestions && patientData.patientId && patientData.name && patientData.age !== '';
 
-  // Reliable auto-scroll to center question perfectly
+  // Perfect center scrolling with animation timing
   const scrollToQuestion = useCallback((questionId: string) => {
-    // Use requestAnimationFrame for better timing
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        const questionElement = questionRefs.current[questionId];
-        if (questionElement) {
-          // Get current positions
-          const elementRect = questionElement.getBoundingClientRect();
-          const viewportHeight = window.innerHeight;
-          
-          // Calculate exact center position
-          const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          const elementTopRelativeToDocument = elementRect.top + currentScrollTop;
-          
-          // Target: center of viewport minus half element height
-          const targetScrollTop = elementTopRelativeToDocument - (viewportHeight / 2) + (elementRect.height / 2);
-          
-          // Ensure we don't scroll past document boundaries
-          const maxScroll = document.documentElement.scrollHeight - viewportHeight;
-          const finalScrollTop = Math.max(0, Math.min(targetScrollTop, maxScroll));
-          
-          // Smooth scroll to exact position
-          window.scrollTo({
-            top: finalScrollTop,
-            behavior: 'smooth'
-          });
+    // Wait for DOM to settle after state change
+    setTimeout(() => {
+      const questionElement = questionRefs.current[questionId];
+      if (!questionElement) return;
+      
+      // Multiple measurement attempts for accuracy
+      const measureAndScroll = (attempts = 0) => {
+        if (attempts > 3) return; // Prevent infinite loop
+        
+        const rect = questionElement.getBoundingClientRect();
+        
+        // If element has no height, wait and retry
+        if (rect.height === 0 && attempts < 3) {
+          setTimeout(() => measureAndScroll(attempts + 1), 50);
+          return;
         }
-      }, 100);
-    });
+        
+        const viewportHeight = window.innerHeight;
+        const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const elementTop = rect.top + currentScrollTop;
+        
+        // Calculate perfect center position
+        // Target: element center should be at viewport center
+        const targetScrollTop = elementTop - (viewportHeight / 2) + (rect.height / 2);
+        
+        // Add slight offset to show element fully in center with padding
+        const padding = 20;
+        const finalScrollTop = Math.max(0, targetScrollTop - padding);
+        
+        // Smooth scroll to position
+        window.scrollTo({
+          top: finalScrollTop,
+          behavior: 'smooth'
+        });
+      };
+      
+      measureAndScroll();
+    }, 600); // Wait for 0.5s animation + 0.1s buffer
   }, []);
 
   // Handle revealing next question
@@ -373,8 +383,11 @@ export const AssessmentForm: React.FC = () => {
                           key={question.id}
                           ref={el => questionRefs.current[question.id] = el}
                           className={`transform transition-all duration-500 ${
-                            isNewQuestion ? 'animate-fade-in animate-scale-in' : ''
-                          } ${isAnswered ? 'opacity-90' : 'opacity-100'}`}
+                            isNewQuestion ? 'opacity-0' : 'opacity-100'
+                          } ${isAnswered ? 'opacity-90' : ''}`}
+                          style={isNewQuestion ? { 
+                            animation: 'fade-in 0.5s ease-out 0.1s forwards, scale-in 0.5s ease-out 0.1s forwards'
+                          } : {}}
                         >
                           {/* Category header for first question in category */}
                           {(index === 0 || question.category !== questionsToShow[index - 1]?.category) && (
