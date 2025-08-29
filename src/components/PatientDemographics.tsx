@@ -53,7 +53,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
     const patient = patients.find(p => p.id === patientId);
     if (patient) {
       onPatientDataChange({
-        patientId: patient.id, // Store the database ID for future assessments
+        patientId: patient.patient_id, // Use the patient_id field, not the database ID
         name: patient.name,
         age: patient.age,
         gender: patient.gender,
