@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Calendar, Hash, Users } from 'lucide-react';
+import { useAssessmentData } from '@/hooks/useAssessmentData';
 
 interface PatientDemographicsProps {
   patientData: {
@@ -11,19 +12,37 @@ interface PatientDemographicsProps {
     age: number | '';
     name: string;
     gender?: string;
+    unit_id?: string;
+    room_id?: string;
+    bed_id?: string;
   };
-  onPatientDataChange: (data: { patientId: string; age: number | ''; name: string; gender?: string }) => void;
+  onPatientDataChange: (data: { patientId: string; age: number | ''; name: string; gender?: string; unit_id?: string; room_id?: string; bed_id?: string }) => void;
 }
 
 export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
   patientData,
   onPatientDataChange
 }) => {
+  const { units, roomsByUnit, bedsByRoom } = useAssessmentData();
   const handleChange = (field: keyof typeof patientData, value: string | number) => {
     onPatientDataChange({
       ...patientData,
       [field]: value
     });
+  };
+
+  const handleUnitChange = (unitId: string) => {
+    // Reset dependent fields when unit changes
+    onPatientDataChange({ ...patientData, unit_id: unitId, room_id: '', bed_id: '' });
+  };
+
+  const handleRoomChange = (roomId: string) => {
+    // Reset bed when room changes
+    onPatientDataChange({ ...patientData, room_id: roomId, bed_id: '' });
+  };
+
+  const handleBedChange = (bedId: string) => {
+    onPatientDataChange({ ...patientData, bed_id: bedId });
   };
 
   const getAgeCategory = () => {
@@ -105,6 +124,48 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
                 <SelectItem value="female">Female</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
                 <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Unit selector */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-sm font-medium">Unit</Label>
+            <Select value={patientData.unit_id || ''} onValueChange={handleUnitChange}>
+              <SelectTrigger className="transition-all duration-200 focus:shadow-medical">
+                <SelectValue placeholder="Select unit" />
+              </SelectTrigger>
+              <SelectContent>
+                {(units || []).map((u) => (
+                  <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Room selector */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-sm font-medium">Room</Label>
+            <Select value={patientData.room_id || ''} onValueChange={handleRoomChange} disabled={!patientData.unit_id}>
+              <SelectTrigger className="transition-all duration-200 focus:shadow-medical">
+                <SelectValue placeholder="Select room" />
+              </SelectTrigger>
+              <SelectContent>
+                {(patientData.unit_id ? (roomsByUnit[patientData.unit_id] || []) : []).map((r) => (
+                  <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Bed selector */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-sm font-medium">Bed</Label>
+            <Select value={patientData.bed_id || ''} onValueChange={handleBedChange} disabled={!patientData.room_id}>
+              <SelectTrigger className="transition-all duration-200 focus:shadow-medical">
+                <SelectValue placeholder="Select bed" />
+              </SelectTrigger>
+              <SelectContent>
+                {(patientData.room_id ? (bedsByRoom[patientData.room_id] || []) : []).map((b) => (
+                  <SelectItem key={b.id} value={b.id}>{b.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

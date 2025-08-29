@@ -24,6 +24,9 @@ interface PatientData {
   age: number | '';
   name: string;
   gender?: string;
+  unit_id?: string;
+  room_id?: string;
+  bed_id?: string;
 }
 
 interface AssessmentAnswer {
@@ -46,7 +49,10 @@ export const AssessmentForm: React.FC = () => {
       patientId: '',
       age: '',
       name: '',
-      gender: ''
+      gender: '',
+      unit_id: '',
+      room_id: '',
+      bed_id: ''
     };
   });
 
@@ -96,10 +102,13 @@ export const AssessmentForm: React.FC = () => {
           if (assessment) {
             // Load patient data with proper mapping
             setPatientData({
-              patientId: assessment.patient_gender || '', // Use gender as patientId
+              patientId: assessment.patient_gender || '',
               age: assessment.patient_age,
               name: assessment.patient_name,
-              gender: assessment.patient_gender
+              gender: assessment.patient_gender,
+              unit_id: (assessment as any).unit_id || '',
+              room_id: (assessment as any).room_id || '',
+              bed_id: (assessment as any).bed_id || ''
             });
 
             // Load answers
@@ -123,7 +132,10 @@ export const AssessmentForm: React.FC = () => {
               patientId: assessment.patient_gender || '',
               age: assessment.patient_age,
               name: assessment.patient_name,
-              gender: assessment.patient_gender
+              gender: assessment.patient_gender,
+              unit_id: (assessment as any).unit_id || '',
+              room_id: (assessment as any).room_id || '',
+              bed_id: (assessment as any).bed_id || ''
             }));
             localStorage.setItem('assessment-answers', JSON.stringify(loadedAnswers));
             
@@ -220,6 +232,9 @@ export const AssessmentForm: React.FC = () => {
         name: patientData.name,
         age: patientData.age as number,
         gender: patientData.gender || patientData.patientId, // Use gender field if available
+        unit_id: patientData.unit_id,
+        room_id: patientData.room_id,
+        bed_id: patientData.bed_id,
       },
       answers: Object.values(answers).map(answer => {
         const question = relevantQuestions.find(q => q.id === answer.questionId);
@@ -292,6 +307,9 @@ export const AssessmentForm: React.FC = () => {
         name: patientData.name,
         age: patientData.age as number,
         gender: patientData.gender || patientData.patientId,
+        unit_id: patientData.unit_id,
+        room_id: patientData.room_id,
+        bed_id: patientData.bed_id,
       },
       answers: Object.values(answers).map(answer => {
         const question = relevantQuestions.find(q => q.id === answer.questionId);

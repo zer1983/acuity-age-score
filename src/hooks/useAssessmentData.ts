@@ -44,6 +44,9 @@ interface Population {
 export const useAssessmentData = () => {
   const [questions, setQuestions] = useState<AssessmentQuestionData[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [units, setUnits] = useState<Array<{ id: string; name: string }>>([]);
+  const [roomsByUnit, setRoomsByUnit] = useState<Record<string, Array<{ id: string; name: string }>>>({});
+  const [bedsByRoom, setBedsByRoom] = useState<Record<string, Array<{ id: string; label: string }>>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,17 +56,23 @@ export const useAssessmentData = () => {
         setLoading(true);
         
         // Fetch all data in parallel
-        const [categoriesRes, questionsRes, answersRes, populationsRes] = await Promise.all([
+        const [categoriesRes, questionsRes, answersRes, populationsRes, unitsRes, roomsRes, bedsRes] = await Promise.all([
           supabase.from('Category').select('*').order('Category_ID'),
           supabase.from('Question').select('*').order('Question_ID'),
           supabase.from('answer').select('*').order('Question_ID'),
-          supabase.from('Population').select('*').order('PID')
+          supabase.from('Population').select('*').order('PID'),
+          supabase.from('units').select('id, name').order('name'),
+          supabase.from('rooms').select('id, name, unit_id').order('name'),
+          supabase.from('beds').select('id, label, room_id').order('label')
         ]);
 
         if (categoriesRes.error) throw categoriesRes.error;
         if (questionsRes.error) throw questionsRes.error;
         if (answersRes.error) throw answersRes.error;
         if (populationsRes.error) throw populationsRes.error;
+        if (unitsRes.error) throw unitsRes.error;
+        if (roomsRes.error) throw roomsRes.error;
+        if (bedsRes.error) throw bedsRes.error;
 
         const categories = categoriesRes.data as Category[];
         const questions = questionsRes.data as Question[];
@@ -113,6 +122,22 @@ export const useAssessmentData = () => {
 
         setQuestions(transformedQuestions);
         setCategories(uniqueCategories);
+        // facility structures
+        setUnits((unitsRes.data || []) as Array<{ id: string; name: string }>);
+        const roomsData = (roomsRes.data || []) as Array<{ id: string; name: string; unit_id: string }>;
+        const bedsData = (bedsRes.data || []) as Array<{ id: string; label: string; room_id: string }>;
+        const roomsByUnitMap: Record<string, Array<{ id: string; name: string }>> = {};
+        roomsData.forEach(r => {
+          if (!roomsByUnitMap[r.unit_id]) roomsByUnitMap[r.unit_id] = [];
+          roomsByUnitMap[r.unit_id].push({ id: r.id, name: r.name });
+        });
+        setRoomsByUnit(roomsByUnitMap);
+        const bedsByRoomMap: Record<string, Array<{ id: string; label: string }>> = {};
+        bedsData.forEach(b => {
+          if (!bedsByRoomMap[b.room_id]) bedsByRoomMap[b.room_id] = [];
+          bedsByRoomMap[b.room_id] = [...(bedsByRoomMap[b.room_id] || []), { id: b.id, label: b.label }];
+        });
+        setBedsByRoom(bedsByRoomMap);
         setError(null);
       } catch (err) {
         console.error('Error fetching assessment data:', err);
@@ -125,5 +150,5 @@ export const useAssessmentData = () => {
     fetchAssessmentData();
   }, []);
 
-  return { questions, categories, loading, error };
+  return { questions, categories, units, roomsByUnit, bedsByRoom, loading, error };
 };

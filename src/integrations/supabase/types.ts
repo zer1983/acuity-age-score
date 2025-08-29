@@ -92,6 +92,9 @@ export type Database = {
           patient_age: number
           patient_gender: string
           patient_name: string
+          unit_id: string | null
+          room_id: string | null
+          bed_id: string | null
           total_score: number | null
           updated_at: string
           user_id: string
@@ -103,6 +106,9 @@ export type Database = {
           patient_age: number
           patient_gender: string
           patient_name: string
+          unit_id?: string | null
+          room_id?: string | null
+          bed_id?: string | null
           total_score?: number | null
           updated_at?: string
           user_id: string
@@ -114,6 +120,9 @@ export type Database = {
           patient_age?: number
           patient_gender?: string
           patient_name?: string
+          unit_id?: string | null
+          room_id?: string | null
+          bed_id?: string | null
           total_score?: number | null
           updated_at?: string
           user_id?: string
@@ -126,6 +135,103 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "assessments_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessments_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessments_bed_id_fkey"
+            columns: ["bed_id"]
+            isOneToOne: false
+            referencedRelation: "beds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      rooms: {
+        Row: {
+          id: string
+          unit_id: string
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          unit_id: string
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          unit_id?: string
+          name?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      beds: {
+        Row: {
+          id: string
+          room_id: string
+          label: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          room_id: string
+          label: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          room_id?: string
+          label?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beds_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          }
         ]
       }
       Category: {

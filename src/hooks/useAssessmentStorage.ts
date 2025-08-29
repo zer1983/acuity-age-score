@@ -7,6 +7,9 @@ interface PatientData {
   name: string;
   age: number;
   gender: string;
+  unit_id?: string;
+  room_id?: string;
+  bed_id?: string;
 }
 
 interface AssessmentAnswer {
@@ -65,6 +68,9 @@ export const useAssessmentStorage = () => {
           patient_name: submission.patientData.name,
           patient_age: submission.patientData.age,
           patient_gender: submission.patientData.gender,
+          unit_id: submission.patientData.unit_id ?? null,
+          room_id: submission.patientData.room_id ?? null,
+          bed_id: submission.patientData.bed_id ?? null,
           total_score: submission.totalScore,
         })
         .select()
@@ -255,6 +261,9 @@ export const useAssessmentStorage = () => {
           patient_name: submission.patientData.name,
           patient_age: submission.patientData.age,
           patient_gender: submission.patientData.gender,
+          unit_id: submission.patientData.unit_id ?? null,
+          room_id: submission.patientData.room_id ?? null,
+          bed_id: submission.patientData.bed_id ?? null,
           total_score: submission.totalScore,
           updated_at: new Date().toISOString(),
         })
