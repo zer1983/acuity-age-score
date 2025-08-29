@@ -3,11 +3,12 @@ import { UserNav } from '@/components/UserNav';
 import { useUserRole } from '@/hooks/useUserRole';
 import { HospitalAdminDashboard } from '@/components/HospitalAdminDashboard';
 import { UnitAdminDashboard } from '@/components/UnitAdminDashboard';
+import { SystemAdminDashboard } from '@/components/SystemAdminDashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
-  const { userProfile, loading, isHospitalAdmin, isUnitAdmin } = useUserRole();
+  const { userProfile, loading, isSystemAdmin, isHospitalAdmin, isUnitAdmin } = useUserRole();
 
   if (loading) {
     return (
@@ -73,10 +74,11 @@ export const Dashboard: React.FC = () => {
           <UserNav />
         </div>
 
+        {isSystemAdmin() && <SystemAdminDashboard />}
         {isHospitalAdmin() && <HospitalAdminDashboard />}
         {isUnitAdmin() && <UnitAdminDashboard />}
         
-        {!isHospitalAdmin() && !isUnitAdmin() && (
+        {!isSystemAdmin() && !isHospitalAdmin() && !isUnitAdmin() && (
           <Card>
             <CardContent className="flex items-center justify-center p-12">
               <div className="text-center">

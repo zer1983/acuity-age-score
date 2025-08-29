@@ -35,14 +35,16 @@ export const useUserRole = () => {
     }
   }, [user]);
 
+  const isSystemAdmin = () => userProfile?.role === 'system_admin';
   const isHospitalAdmin = () => userProfile?.role === 'hospital_admin';
-  const isUnitAdmin = () => userProfile?.role === 'unit_admin';
+  const isUnitAdmin = () => userProfile?.role === 'admin';
   const isUser = () => userProfile?.role === 'user';
   
-  const canManageUnits = () => isHospitalAdmin();
-  const canManageRooms = () => isHospitalAdmin() || isUnitAdmin();
-  const canManageBeds = () => isHospitalAdmin() || isUnitAdmin();
-  const canManagePatients = () => isHospitalAdmin() || isUnitAdmin();
+  const canManageUnits = () => isSystemAdmin() || isHospitalAdmin();
+  const canManageRooms = () => isSystemAdmin() || isHospitalAdmin() || isUnitAdmin();
+  const canManageBeds = () => isSystemAdmin() || isHospitalAdmin() || isUnitAdmin();
+  const canManagePatients = () => isSystemAdmin() || isHospitalAdmin() || isUnitAdmin();
+  const canManageUsers = () => isSystemAdmin() || isHospitalAdmin();
   
   const getUserUnitId = () => userProfile?.unit_id;
 
@@ -54,6 +56,7 @@ export const useUserRole = () => {
     userProfile,
     loading,
     error,
+    isSystemAdmin,
     isHospitalAdmin,
     isUnitAdmin,
     isUser,
@@ -61,6 +64,7 @@ export const useUserRole = () => {
     canManageRooms,
     canManageBeds,
     canManagePatients,
+    canManageUsers,
     getUserUnitId,
     refetch: fetchUserProfile
   };

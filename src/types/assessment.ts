@@ -132,7 +132,7 @@ export interface SortOptions {
 }
 
 // User role types
-export type UserRole = 'hospital_admin' | 'unit_admin' | 'user';
+export type UserRole = 'user' | 'admin' | 'hospital_admin' | 'system_admin';
 
 export interface UserProfile {
   id: string;
@@ -142,6 +142,17 @@ export interface UserProfile {
   username?: string;
   role: UserRole;
   unit_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  unit_id?: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

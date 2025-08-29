@@ -122,6 +122,25 @@ const Auth = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Default Login Information */}
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                🔑 Default Login Information
+              </h3>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                All users have the default password: <code className="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">123123</code>
+              </p>
+              <div className="text-xs text-blue-600 dark:text-blue-400">
+                <p className="mb-1"><strong>System Admin:</strong> system.admin@hospital.com</p>
+                <p className="mb-1"><strong>Hospital Admin:</strong> hospital.admin@hospital.com</p>
+                <p className="mb-1"><strong>Unit Admin:</strong> unit.admin.icu@hospital.com</p>
+                <p className="mb-1"><strong>Regular User:</strong> nurse.icu1@hospital.com</p>
+                <p className="text-xs text-blue-500 dark:text-blue-400 mt-2">
+                  💡 You can change roles in Supabase for selected users to assign Admin, Hospital Admin, or System Admin privileges.
+                </p>
+              </div>
+            </div>
+
             <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin" className="gap-2">
