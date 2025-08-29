@@ -44,7 +44,29 @@ interface Population {
 export const useAssessmentData = () => {
   const [questions, setQuestions] = useState<AssessmentQuestionData[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [units, setUnits] = useState<Array<{ id: string; name: string }>>([]);
+  const [units, setUnits] = useState<Array<{ 
+    id: string; 
+    name: string; 
+    description?: string; 
+    floor_number?: number; 
+    capacity?: number; 
+  }>>([]);
+  const [rooms, setRooms] = useState<Array<{ 
+    id: string; 
+    name: string; 
+    unit_id: string; 
+    room_number?: string; 
+    room_type?: string; 
+    capacity?: number; 
+  }>>([]);
+  const [beds, setBeds] = useState<Array<{ 
+    id: string; 
+    label: string; 
+    room_id: string; 
+    bed_number?: string; 
+    bed_type?: string; 
+    is_occupied?: boolean; 
+  }>>([]);
   const [roomsByUnit, setRoomsByUnit] = useState<Record<string, Array<{ id: string; name: string }>>>({});
   const [bedsByRoom, setBedsByRoom] = useState<Record<string, Array<{ id: string; label: string }>>>({});
   const [loading, setLoading] = useState(true);
@@ -123,22 +145,39 @@ export const useAssessmentData = () => {
 
         setQuestions(transformedQuestions);
         setCategories(uniqueCategories);
-        // facility structures (gracefully handle missing tables)
-        const unitsData = (unitsError ? [] : (unitsRes.data || [])) as Array<{ id: string; name: string }>;
-        const roomsData = (roomsError ? [] : (roomsRes.data || [])) as Array<{ id: string; name: string; unit_id: string }>;
-        const bedsData = (bedsError ? [] : (bedsRes.data || [])) as Array<{ id: string; label: string; room_id: string }>;
+        // Load hospital structure data
+        const [unitsResult, roomsResult, bedsResult] = await Promise.all([
+          supabase.from('units').select('*'),
+          supabase.from('rooms').select('*'),
+          supabase.from('beds').select('*')
+        ]);
+
+        if (unitsResult.error) throw unitsResult.error;
+        if (roomsResult.error) throw roomsResult.error;
+        if (bedsResult.error) throw bedsResult.error;
+
+        const unitsData = unitsResult.data || [];
+        const roomsData = roomsResult.data || [];
+        const bedsData = bedsResult.data || [];
+
         setUnits(unitsData);
+        setRooms(roomsData);
+        setBeds(bedsData);
+
+        // Create lookup maps
         const roomsByUnitMap: Record<string, Array<{ id: string; name: string }>> = {};
         roomsData.forEach(r => {
           if (!roomsByUnitMap[r.unit_id]) roomsByUnitMap[r.unit_id] = [];
           roomsByUnitMap[r.unit_id].push({ id: r.id, name: r.name });
         });
-        setRoomsByUnit(roomsByUnitMap);
+
         const bedsByRoomMap: Record<string, Array<{ id: string; label: string }>> = {};
         bedsData.forEach(b => {
           if (!bedsByRoomMap[b.room_id]) bedsByRoomMap[b.room_id] = [];
-          bedsByRoomMap[b.room_id] = [...(bedsByRoomMap[b.room_id] || []), { id: b.id, label: b.label }];
+          bedsByRoomMap[b.room_id].push({ id: b.id, label: b.label });
         });
+
+        setRoomsByUnit(roomsByUnitMap);
         setBedsByRoom(bedsByRoomMap);
         setError(null);
       } catch (err) {
@@ -152,5 +191,15 @@ export const useAssessmentData = () => {
     fetchAssessmentData();
   }, []);
 
-  return { questions, categories, units, roomsByUnit, bedsByRoom, loading, error };
+  return { 
+    questions, 
+    categories, 
+    units, 
+    rooms,
+    beds,
+    roomsByUnit,
+    bedsByRoom,
+    loading, 
+    error 
+  };
 };

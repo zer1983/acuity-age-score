@@ -21,6 +21,9 @@ export interface PatientData {
   age: number | '';
   name: string;
   gender?: string;
+  unit_id?: string;
+  room_id?: string;
+  bed_id?: string;
 }
 
 export interface AssessmentAnswer {

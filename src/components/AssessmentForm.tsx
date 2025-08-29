@@ -63,6 +63,7 @@ export const AssessmentForm: React.FC = () => {
   
   const [showResults, setShowResults] = useState(false);
   const [viewMode, setViewMode] = useState<'assessment' | 'history'>('assessment');
+  const [assessmentSaved, setAssessmentSaved] = useState(false);
 
   
   // Refs for auto-scroll
@@ -566,6 +567,7 @@ export const AssessmentForm: React.FC = () => {
                 totalScore={totalScore}
                 answers={answers}
                 questions={relevantQuestions}
+                categories={[...new Set(relevantQuestions.map(q => q.category))]}
                 patientData={patientData}
                 isEditMode={isEditMode}
               />

@@ -87,59 +87,52 @@ export type Database = {
       assessments: {
         Row: {
           assessment_date: string
+          bed_id: string | null
           created_at: string
           id: string
           patient_age: number
           patient_gender: string
           patient_name: string
-          unit_id: string | null
           room_id: string | null
-          bed_id: string | null
           total_score: number | null
+          unit_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           assessment_date?: string
+          bed_id?: string | null
           created_at?: string
           id?: string
           patient_age: number
           patient_gender: string
           patient_name: string
-          unit_id?: string | null
           room_id?: string | null
-          bed_id?: string | null
           total_score?: number | null
+          unit_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           assessment_date?: string
+          bed_id?: string | null
           created_at?: string
           id?: string
           patient_age?: number
           patient_gender?: string
           patient_name?: string
-          unit_id?: string | null
           room_id?: string | null
-          bed_id?: string | null
           total_score?: number | null
+          unit_id?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fk_assessments_user_id"
-            columns: ["user_id"]
+            foreignKeyName: "assessments_bed_id_fkey"
+            columns: ["bed_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "assessments_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
+            referencedRelation: "beds"
             referencedColumns: ["id"]
           },
           {
@@ -150,79 +143,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "assessments_bed_id_fkey"
-            columns: ["bed_id"]
-            isOneToOne: false
-            referencedRelation: "beds"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      units: {
-        Row: {
-          id: string
-          name: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      rooms: {
-        Row: {
-          id: string
-          unit_id: string
-          name: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          unit_id: string
-          name: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          unit_id?: string
-          name?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "rooms_unit_id_fkey"
+            foreignKeyName: "assessments_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
-          }
+          },
+          {
+            foreignKeyName: "fk_assessments_user_id"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       beds: {
         Row: {
-          id: string
-          room_id: string
-          label: string
+          bed_number: string
+          bed_type: string | null
           created_at: string
+          id: string
+          is_occupied: boolean | null
+          label: string
+          room_id: string
+          updated_at: string
         }
         Insert: {
-          id?: string
-          room_id: string
-          label: string
+          bed_number: string
+          bed_type?: string | null
           created_at?: string
+          id?: string
+          is_occupied?: boolean | null
+          label: string
+          room_id: string
+          updated_at?: string
         }
         Update: {
-          id?: string
-          room_id?: string
-          label?: string
+          bed_number?: string
+          bed_type?: string | null
           created_at?: string
+          id?: string
+          is_occupied?: boolean | null
+          label?: string
+          room_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -231,7 +196,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rooms"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       Category: {
@@ -340,6 +305,77 @@ export type Database = {
             referencedColumns: ["PID"]
           },
         ]
+      }
+      rooms: {
+        Row: {
+          capacity: number
+          created_at: string
+          id: string
+          name: string
+          room_number: string
+          room_type: string | null
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          id?: string
+          name: string
+          room_number: string
+          room_type?: string | null
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          id?: string
+          name?: string
+          room_number?: string
+          room_type?: string | null
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          description: string | null
+          floor_number: number | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          floor_number?: number | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          floor_number?: number | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {

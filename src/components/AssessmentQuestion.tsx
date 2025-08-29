@@ -18,6 +18,7 @@ interface AssessmentQuestionProps {
   options: QuestionOption[];
   selectedValue: string;
   onValueChange: (questionId: string, value: string, score: number) => void;
+  category?: string;
   isRequired?: boolean;
 }
 

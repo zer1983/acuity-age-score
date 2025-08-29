@@ -38,6 +38,7 @@ interface AssessmentResultsProps {
   totalScore: number;
   categories: string[];
   questions: AssessmentQuestionData[];
+  isEditMode?: boolean;
 }
 
 export const AssessmentResults: React.FC<AssessmentResultsProps> = ({

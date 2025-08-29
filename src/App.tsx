@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Assessment from "./pages/Assessment";
 import AssessmentSummary from "./pages/AssessmentSummary";
+import { Dashboard } from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,11 @@ const App = () => (
             <Route path="/assessment/:assessmentId" element={
               <AuthGuard>
                 <AssessmentSummary />
+              </AuthGuard>
+            } />
+            <Route path="/dashboard" element={
+              <AuthGuard>
+                <Dashboard />
               </AuthGuard>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
