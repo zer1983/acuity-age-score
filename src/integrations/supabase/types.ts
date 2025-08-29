@@ -92,6 +92,7 @@ export type Database = {
           id: string
           patient_age: number
           patient_gender: string
+          patient_id: string | null
           patient_name: string
           room_id: string | null
           total_score: number | null
@@ -106,6 +107,7 @@ export type Database = {
           id?: string
           patient_age: number
           patient_gender: string
+          patient_id?: string | null
           patient_name: string
           room_id?: string | null
           total_score?: number | null
@@ -120,6 +122,7 @@ export type Database = {
           id?: string
           patient_age?: number
           patient_gender?: string
+          patient_id?: string | null
           patient_name?: string
           room_id?: string | null
           total_score?: number | null
@@ -133,6 +136,13 @@ export type Database = {
             columns: ["bed_id"]
             isOneToOne: false
             referencedRelation: "beds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
             referencedColumns: ["id"]
           },
           {
@@ -222,6 +232,70 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "Population"
             referencedColumns: ["PID"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          admission_date: string
+          age: number
+          bed_id: string | null
+          created_at: string
+          gender: string
+          id: string
+          name: string
+          patient_id: string
+          room_id: string | null
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admission_date?: string
+          age: number
+          bed_id?: string | null
+          created_at?: string
+          gender: string
+          id?: string
+          name: string
+          patient_id: string
+          room_id?: string | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admission_date?: string
+          age?: number
+          bed_id?: string | null
+          created_at?: string
+          gender?: string
+          id?: string
+          name?: string
+          patient_id?: string
+          room_id?: string | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_bed_id_fkey"
+            columns: ["bed_id"]
+            isOneToOne: false
+            referencedRelation: "beds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patients_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
           },
         ]
       }

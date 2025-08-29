@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
 interface PatientData {
+  patientId?: string; // This can be the patient record ID for reference
   name: string;
   age: number;
   gender: string;
@@ -65,6 +66,7 @@ export const useAssessmentStorage = () => {
         .from('assessments')
         .insert({
           user_id: user.id,
+          patient_id: submission.patientData.patientId ? submission.patientData.patientId : null,
           patient_name: submission.patientData.name,
           patient_age: submission.patientData.age,
           patient_gender: submission.patientData.gender,
@@ -258,6 +260,7 @@ export const useAssessmentStorage = () => {
       const { error: assessmentError } = await supabase
         .from('assessments')
         .update({
+          patient_id: submission.patientData.patientId ? submission.patientData.patientId : null,
           patient_name: submission.patientData.name,
           patient_age: submission.patientData.age,
           patient_gender: submission.patientData.gender,

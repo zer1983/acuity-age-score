@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Calendar, Hash, Users } from 'lucide-react';
+import { User, Calendar, Hash, Users, Search } from 'lucide-react';
 import { useAssessmentData } from '@/hooks/useAssessmentData';
+import { usePatientData } from '@/hooks/usePatientData';
+import { Button } from '@/components/ui/button';
 
 interface PatientDemographicsProps {
   patientData: {
@@ -24,6 +26,8 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
   onPatientDataChange
 }) => {
   const { units, roomsByUnit, bedsByRoom } = useAssessmentData();
+  const { patients } = usePatientData();
+  const [showPatientSelect, setShowPatientSelect] = React.useState(false);
   const handleChange = (field: keyof typeof patientData, value: string | number) => {
     onPatientDataChange({
       ...patientData,
@@ -45,6 +49,22 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
     onPatientDataChange({ ...patientData, bed_id: bedId });
   };
 
+  const handlePatientSelect = (patientId: string) => {
+    const patient = patients.find(p => p.id === patientId);
+    if (patient) {
+      onPatientDataChange({
+        patientId: patient.id, // Store the database ID for future assessments
+        name: patient.name,
+        age: patient.age,
+        gender: patient.gender,
+        unit_id: patient.unit_id || '',
+        room_id: patient.room_id || '',
+        bed_id: patient.bed_id || ''
+      });
+    }
+    setShowPatientSelect(false);
+  };
+
   const getAgeCategory = () => {
     if (patientData.age === '' || patientData.age < 0) return '';
     return patientData.age < 14 ? 'Pediatric (<14 years)' : 'Adult (≥14 years)';
@@ -55,12 +75,41 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
   return (
     <Card className="shadow-card-custom bg-gradient-assessment border-primary/20">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-3 text-primary">
-          <User className="h-5 w-5" />
-          Patient Demographics
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-3 text-primary">
+            <User className="h-5 w-5" />
+            Patient Demographics
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPatientSelect(!showPatientSelect)}
+            className="flex items-center gap-2"
+          >
+            <Search className="h-4 w-4" />
+            Select Existing Patient
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {showPatientSelect && (
+          <div className="p-4 border rounded-lg bg-muted/50">
+            <Label className="text-sm font-medium mb-2 block">Select from existing patients:</Label>
+            <Select onValueChange={handlePatientSelect}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a patient..." />
+              </SelectTrigger>
+              <SelectContent>
+                {patients.map((patient) => (
+                  <SelectItem key={patient.id} value={patient.id}>
+                    {patient.patient_id} - {patient.name} ({patient.age}y, {patient.gender})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label htmlFor="patientId" className="flex items-center gap-2 text-sm font-medium">

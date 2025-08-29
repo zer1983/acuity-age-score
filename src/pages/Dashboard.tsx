@@ -9,8 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { UserNav } from '@/components/UserNav';
-import { Building2, DoorOpen, Bed, Plus, Edit, Trash2, Settings } from 'lucide-react';
+import { Building2, DoorOpen, Bed, Plus, Edit, Trash2, Settings, UserCheck } from 'lucide-react';
 import { useAssessmentData } from '@/hooks/useAssessmentData';
+import { usePatientData } from '@/hooks/usePatientData';
+import { Patient } from '@/types/assessment';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -37,10 +39,22 @@ interface BedFormData {
   is_occupied: boolean;
 }
 
+interface PatientFormData {
+  patient_id: string;
+  name: string;
+  age: number;
+  gender: string;
+  unit_id: string;
+  room_id: string;
+  bed_id: string;
+  admission_date: string;
+}
+
 export const Dashboard: React.FC = () => {
   const { units, rooms, beds, roomsByUnit, bedsByRoom } = useAssessmentData();
+  const { patients, createPatient, updatePatient, deletePatient } = usePatientData();
   const [isLoading, setIsLoading] = useState(false);
-  const [openDialog, setOpenDialog] = useState<'unit' | 'room' | 'bed' | null>(null);
+  const [openDialog, setOpenDialog] = useState<'unit' | 'room' | 'bed' | 'patient' | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   
   const [unitForm, setUnitForm] = useState<UnitFormData>({
@@ -66,10 +80,25 @@ export const Dashboard: React.FC = () => {
     is_occupied: false
   });
 
+  const [patientForm, setPatientForm] = useState<PatientFormData>({
+    patient_id: '',
+    name: '',
+    age: 0,
+    gender: 'Male',
+    unit_id: '',
+    room_id: '',
+    bed_id: '',
+    admission_date: new Date().toISOString().split('T')[0]
+  });
+
   const resetForms = () => {
     setUnitForm({ name: '', description: '', floor_number: 1, capacity: 1 });
     setRoomForm({ unit_id: '', name: '', room_number: '', room_type: 'standard', capacity: 1 });
     setBedForm({ room_id: '', label: '', bed_number: '', bed_type: 'standard', is_occupied: false });
+    setPatientForm({ 
+      patient_id: '', name: '', age: 0, gender: 'Male', unit_id: '', room_id: '', bed_id: '', 
+      admission_date: new Date().toISOString().split('T')[0] 
+    });
     setEditingItem(null);
   };
 
@@ -154,20 +183,46 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleDelete = async (type: 'unit' | 'room' | 'bed', id: string) => {
+  const handleSavePatient = async () => {
+    setIsLoading(true);
+    try {
+      if (editingItem) {
+        const result = await updatePatient(editingItem.id, patientForm);
+        if (result.error) throw new Error(result.error);
+        toast({ title: "Patient updated successfully!" });
+      } else {
+        const result = await createPatient(patientForm);
+        if (result.error) throw new Error(result.error);
+        toast({ title: "Patient created successfully!" });
+      }
+      setOpenDialog(null);
+      resetForms();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to save patient", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (type: 'unit' | 'room' | 'bed' | 'patient', id: string) => {
     if (!confirm(`Are you sure you want to delete this ${type}? This action cannot be undone.`)) return;
     
     setIsLoading(true);
     try {
-      const tableName = type === 'unit' ? 'units' : type === 'room' ? 'rooms' : 'beds';
-      const { error } = await supabase
-        .from(tableName)
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
+      if (type === 'patient') {
+        const result = await deletePatient(id);
+        if (result.error) throw new Error(result.error);
+      } else {
+        const tableName = type === 'unit' ? 'units' : type === 'room' ? 'rooms' : 'beds';
+        const { error } = await supabase
+          .from(tableName)
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+        window.location.reload();
+      }
       toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!` });
-      window.location.reload();
     } catch (error) {
       toast({ title: "Error", description: `Failed to delete ${type}`, variant: "destructive" });
     } finally {
@@ -175,7 +230,7 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const openEditDialog = (type: 'unit' | 'room' | 'bed', item: any) => {
+  const openEditDialog = (type: 'unit' | 'room' | 'bed' | 'patient', item: any) => {
     setEditingItem(item);
     
     if (type === 'unit') {
@@ -201,6 +256,17 @@ export const Dashboard: React.FC = () => {
         bed_type: item.bed_type,
         is_occupied: item.is_occupied
       });
+    } else if (type === 'patient') {
+      setPatientForm({
+        patient_id: item.patient_id,
+        name: item.name,
+        age: item.age,
+        gender: item.gender,
+        unit_id: item.unit_id || '',
+        room_id: item.room_id || '',
+        bed_id: item.bed_id || '',
+        admission_date: item.admission_date
+      });
     }
     
     setOpenDialog(type);
@@ -225,8 +291,12 @@ export const Dashboard: React.FC = () => {
           <UserNav />
         </div>
 
-        <Tabs defaultValue="units" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="patients" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="patients" className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4" />
+              Patients
+            </TabsTrigger>
             <TabsTrigger value="units" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               Units
@@ -240,6 +310,181 @@ export const Dashboard: React.FC = () => {
               Beds
             </TabsTrigger>
           </TabsList>
+
+          {/* Patients Tab */}
+          <TabsContent value="patients">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Patients</CardTitle>
+                  <Dialog open={openDialog === 'patient'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+                    <DialogTrigger asChild>
+                      <Button onClick={() => { resetForms(); setOpenDialog('patient'); }}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Patient
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>{editingItem ? 'Edit Patient' : 'Add New Patient'}</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="patient-id">Patient ID</Label>
+                            <Input
+                              id="patient-id"
+                              value={patientForm.patient_id}
+                              onChange={(e) => setPatientForm({...patientForm, patient_id: e.target.value})}
+                              placeholder="e.g., P001"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="patient-name">Patient Name</Label>
+                            <Input
+                              id="patient-name"
+                              value={patientForm.name}
+                              onChange={(e) => setPatientForm({...patientForm, name: e.target.value})}
+                              placeholder="Full name"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <Label htmlFor="patient-age">Age</Label>
+                            <Input
+                              id="patient-age"
+                              type="number"
+                              value={patientForm.age}
+                              onChange={(e) => setPatientForm({...patientForm, age: parseInt(e.target.value) || 0})}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="patient-gender">Gender</Label>
+                            <Select value={patientForm.gender} onValueChange={(value) => setPatientForm({...patientForm, gender: value})}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Male">Male</SelectItem>
+                                <SelectItem value="Female">Female</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="admission-date">Admission Date</Label>
+                            <Input
+                              id="admission-date"
+                              type="date"
+                              value={patientForm.admission_date}
+                              onChange={(e) => setPatientForm({...patientForm, admission_date: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <Label htmlFor="patient-unit">Unit</Label>
+                            <Select value={patientForm.unit_id} onValueChange={(value) => setPatientForm({...patientForm, unit_id: value, room_id: '', bed_id: ''})}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select unit" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {units.map((unit) => (
+                                  <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="patient-room">Room</Label>
+                            <Select value={patientForm.room_id} onValueChange={(value) => setPatientForm({...patientForm, room_id: value, bed_id: ''})} disabled={!patientForm.unit_id}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select room" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(roomsByUnit[patientForm.unit_id] || []).map((room) => (
+                                  <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="patient-bed">Bed</Label>
+                            <Select value={patientForm.bed_id} onValueChange={(value) => setPatientForm({...patientForm, bed_id: value})} disabled={!patientForm.room_id}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select bed" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(bedsByRoom[patientForm.room_id] || []).map((bed) => (
+                                  <SelectItem key={bed.id} value={bed.id}>{bed.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={() => setOpenDialog(null)}>Cancel</Button>
+                          <Button onClick={handleSavePatient} disabled={isLoading}>
+                            {isLoading ? 'Saving...' : (editingItem ? 'Update' : 'Create')}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Patient ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Age</TableHead>
+                      <TableHead>Gender</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Admission</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {patients.map((patient) => (
+                      <TableRow key={patient.id}>
+                        <TableCell className="font-medium">{patient.patient_id}</TableCell>
+                        <TableCell>{patient.name}</TableCell>
+                        <TableCell>{patient.age}</TableCell>
+                        <TableCell>{patient.gender}</TableCell>
+                        <TableCell>
+                          {patient.unit_id && (
+                            <div className="text-sm">
+                              Unit: {units.find(u => u.id === patient.unit_id)?.name || 'Unknown'}
+                              {patient.room_id && (
+                                <><br />Room: {rooms.find(r => r.id === patient.room_id)?.name || 'Unknown'}</>
+                              )}
+                              {patient.bed_id && (
+                                <><br />Bed: {beds.find(b => b.id === patient.bed_id)?.label || 'Unknown'}</>
+                              )}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>{new Date(patient.admission_date).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => openEditDialog('patient', patient)}>
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleDelete('patient', patient.id)}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Units Tab */}
           <TabsContent value="units">

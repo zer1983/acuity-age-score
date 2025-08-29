@@ -26,6 +26,21 @@ export interface PatientData {
   bed_id?: string;
 }
 
+// Database patient record
+export interface Patient {
+  id: string;
+  patient_id: string;
+  name: string;
+  age: number;
+  gender: string;
+  unit_id?: string;
+  room_id?: string;
+  bed_id?: string;
+  admission_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AssessmentAnswer {
   questionId: string;
   value: string;
