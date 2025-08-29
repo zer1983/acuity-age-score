@@ -49,7 +49,7 @@ export const HospitalAdminDashboard: React.FC = () => {
       
       if (error) throw error;
       setUnits(data || []);
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: "Failed to load units", variant: "destructive" });
     }
   };
@@ -74,7 +74,7 @@ export const HospitalAdminDashboard: React.FC = () => {
         evening_scores: number[];
       }>();
 
-      (data || []).forEach((assessment: any) => {
+      (data || []).forEach((assessment: Record<string, unknown>) => {
         if (!assessment.unit_id) return;
         
         const key = assessment.unit_id;
@@ -86,7 +86,8 @@ export const HospitalAdminDashboard: React.FC = () => {
           });
         }
         
-        const metrics = metricsMap.get(key)!;
+        const metrics = metricsMap.get(key);
+        if (!metrics) return;
         if (assessment.shift === 'morning') {
           metrics.morning_scores.push(assessment.total_score || 0);
         } else {
@@ -107,7 +108,7 @@ export const HospitalAdminDashboard: React.FC = () => {
       }));
 
       setUnitMetrics(calculatedMetrics);
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: "Failed to load unit metrics", variant: "destructive" });
     }
   };
@@ -142,7 +143,7 @@ export const HospitalAdminDashboard: React.FC = () => {
       setOpenDialog(false);
       resetForm();
       fetchUnits();
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: "Failed to save unit", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -162,7 +163,7 @@ export const HospitalAdminDashboard: React.FC = () => {
       if (error) throw error;
       toast({ title: "Unit deleted successfully!" });
       fetchUnits();
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: "Failed to delete unit", variant: "destructive" });
     } finally {
       setIsLoading(false);

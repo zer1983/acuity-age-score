@@ -12,25 +12,25 @@ import { DoorOpen, Bed, Plus, Edit, Trash2, UserCheck, FileText } from 'lucide-r
 import { useAssessmentData } from '@/hooks/useAssessmentData';
 import { usePatientData } from '@/hooks/usePatientData';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Patient } from '@/types/assessment';
+// import { Patient } from '@/types/assessment';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-interface RoomFormData {
-  unit_id: string;
-  name: string;
-  room_number: string;
-  room_type: string;
-  capacity: number;
-}
+// interface RoomFormData {
+//   unit_id: string;
+//   name: string;
+//   room_number: string;
+//   room_type: string;
+//   capacity: number;
+// }
 
-interface BedFormData {
-  room_id: string;
-  label: string;
-  bed_number: string;
-  bed_type: string;
-  is_occupied: boolean;
-}
+// interface BedFormData {
+//   room_id: string;
+//   label: string;
+//   bed_number: string;
+//   bed_type: string;
+//   is_occupied: boolean;
+// }
 
 interface PatientFormData {
   patient_id: string;
@@ -47,31 +47,31 @@ interface PatientFormData {
 export const UnitAdminDashboard: React.FC = () => {
   const { units, rooms, beds, roomsByUnit, bedsByRoom } = useAssessmentData();
   const { patients, createPatient, updatePatient, deletePatient } = usePatientData();
-  const { userProfile, getUserUnitId } = useUserRole();
+  const { getUserUnitId } = useUserRole();
   const [isLoading, setIsLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState<'room' | 'bed' | 'patient' | null>(null);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingItem, setEditingItem] = useState<Record<string, unknown> | null>(null);
   
   const userUnitId = getUserUnitId();
   const userUnit = units.find(unit => unit.id === userUnitId);
   const unitRooms = roomsByUnit[userUnitId || ''] || [];
   const unitPatients = patients.filter(p => p.unit_id === userUnitId);
 
-  const [roomForm, setRoomForm] = useState<RoomFormData>({
-    unit_id: userUnitId || '',
-    name: '',
-    room_number: '',
-    room_type: 'standard',
-    capacity: 1
-  });
+  // const [roomForm, setRoomForm] = useState<RoomFormData>({
+  //   unit_id: userUnitId || '',
+  //   name: '',
+  //   room_number: '',
+  //   room_type: 'standard',
+  //   capacity: 1
+  // });
 
-  const [bedForm, setBedForm] = useState<BedFormData>({
-    room_id: '',
-    label: '',
-    bed_number: '',
-    bed_type: 'standard',
-    is_occupied: false
-  });
+  // const [bedForm, setBedForm] = useState<BedFormData>({
+  //   room_id: '',
+  //   label: '',
+  //   bed_number: '',
+  //   bed_type: 'standard',
+  //   is_occupied: false
+  // });
 
   const [patientForm, setPatientForm] = useState<PatientFormData>({
     patient_id: '',
@@ -95,59 +95,59 @@ export const UnitAdminDashboard: React.FC = () => {
     setEditingItem(null);
   };
 
-  const handleSaveRoom = async () => {
-    setIsLoading(true);
-    try {
-      if (editingItem) {
-        const { error } = await supabase
-          .from('rooms')
-          .update(roomForm)
-          .eq('id', editingItem.id);
-        if (error) throw error;
-        toast({ title: "Room updated successfully!" });
-      } else {
-        const { error } = await supabase
-          .from('rooms')
-          .insert([roomForm]);
-        if (error) throw error;
-        toast({ title: "Room created successfully!" });
-      }
-      setOpenDialog(null);
-      resetForms();
-      window.location.reload();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save room", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const handleSaveRoom = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     if (editingItem) {
+  //       const { error } = await supabase
+  //         .from('rooms')
+  //         .update(roomForm)
+  //         .eq('id', editingItem.id);
+  //       if (error) throw error;
+  //       toast({ title: "Room updated successfully!" });
+  //     } else {
+  //       const { error } = await supabase
+  //         .from('rooms')
+  //         .insert([roomForm]);
+  //       if (error) throw error;
+  //       toast({ title: "Room created successfully!" });
+  //     }
+  //     setOpenDialog(null);
+  //     resetForms();
+  //     window.location.reload();
+  //   } catch (error) {
+  //     toast({ title: "Error", description: "Failed to save room", variant: "destructive" });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
-  const handleSaveBed = async () => {
-    setIsLoading(true);
-    try {
-      if (editingItem) {
-        const { error } = await supabase
-          .from('beds')
-          .update(bedForm)
-          .eq('id', editingItem.id);
-        if (error) throw error;
-        toast({ title: "Bed updated successfully!" });
-      } else {
-        const { error } = await supabase
-          .from('beds')
-          .insert([bedForm]);
-        if (error) throw error;
-        toast({ title: "Bed created successfully!" });
-      }
-      setOpenDialog(null);
-      resetForms();
-      window.location.reload();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save bed", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const handleSaveBed = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     if (editingItem) {
+  //       const { error } = await supabase
+  //         .from('beds')
+  //         .update(bedForm)
+  //         .eq('id', editingItem.id);
+  //       if (error) throw error;
+  //       toast({ title: "Bed updated successfully!" });
+  //     } else {
+  //       const { error } = await supabase
+  //         .from('beds')
+  //         .insert([bedForm]);
+  //       if (error) throw error;
+  //       toast({ title: "Bed created successfully!" });
+  //     }
+  //     setOpenDialog(null);
+  //     resetForms();
+  //     window.location.reload();
+  //   } catch (error) {
+  //     toast({ title: "Error", description: "Failed to save bed", variant: "destructive" });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleSavePatient = async () => {
     setIsLoading(true);
@@ -163,7 +163,7 @@ export const UnitAdminDashboard: React.FC = () => {
       }
       setOpenDialog(null);
       resetForms();
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: "Failed to save patient", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -189,14 +189,14 @@ export const UnitAdminDashboard: React.FC = () => {
         window.location.reload();
       }
       toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!` });
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: `Failed to delete ${type}`, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const openEditDialog = (type: 'room' | 'bed' | 'patient', item: any) => {
+  const openEditDialog = (type: 'room' | 'bed' | 'patient', item: Record<string, unknown>) => {
     setEditingItem(item);
     
     if (type === 'room') {
