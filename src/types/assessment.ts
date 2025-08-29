@@ -66,7 +66,7 @@ export interface SavedAssessment {
   total_score: number;
   assessment_date: string;
   shift: 'morning' | 'evening';
-  assessment_data?: any;
+  assessment_data?: Record<string, unknown>;
   created_by?: string;
   unit_id?: string;
   room_id?: string;

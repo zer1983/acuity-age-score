@@ -6,7 +6,7 @@ import { useCallback, useRef } from 'react';
  */
 export function useMemoizedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
-  dependencies: React.DependencyList
+  dependencies: readonly unknown[]
 ): T {
   const ref = useRef<T>(callback);
   
@@ -17,7 +17,7 @@ export function useMemoizedCallback<T extends (...args: unknown[]) => unknown>(
   
   return useCallback((...args: Parameters<T>) => {
     return ref.current(...args);
-  }, dependencies) as T;
+  }, [...dependencies]) as T;
 }
 
 /**
@@ -26,7 +26,7 @@ export function useMemoizedCallback<T extends (...args: unknown[]) => unknown>(
  */
 export function useMemoizedValue<T>(
   value: T,
-  _dependencies: React.DependencyList
+  _dependencies: readonly unknown[]
 ): T {
   const ref = useRef<T>(value);
   

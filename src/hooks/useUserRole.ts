@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole, UserProfile } from '@/types/assessment';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +9,7 @@ export const useUserRole = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -33,7 +33,7 @@ export const useUserRole = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const isHospitalAdmin = () => userProfile?.role === 'hospital_admin';
   const isUnitAdmin = () => userProfile?.role === 'unit_admin';
@@ -48,7 +48,7 @@ export const useUserRole = () => {
 
   useEffect(() => {
     fetchUserProfile();
-  }, [user]);
+  }, [user, fetchUserProfile]);
 
   return {
     userProfile,

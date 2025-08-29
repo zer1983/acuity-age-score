@@ -12,7 +12,7 @@ import { UserNav } from '@/components/UserNav';
 import { Building2, DoorOpen, Bed, Plus, Edit, Trash2, Settings, UserCheck } from 'lucide-react';
 import { useAssessmentData } from '@/hooks/useAssessmentData';
 import { usePatientData } from '@/hooks/usePatientData';
-import { Patient } from '@/types/assessment';
+// import { Patient } from '@/types/assessment';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -56,7 +56,7 @@ export const Dashboard: React.FC = () => {
   const { patients, createPatient, updatePatient, deletePatient } = usePatientData();
   const [isLoading, setIsLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState<'unit' | 'room' | 'bed' | 'patient' | null>(null);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingItem, setEditingItem] = useState<Record<string, unknown> | null>(null);
   
   const [unitForm, setUnitForm] = useState<UnitFormData>({
     name: '',
@@ -115,16 +115,16 @@ export const Dashboard: React.FC = () => {
         if (error) throw error;
         toast({ title: "Unit updated successfully!" });
       } else {
-        const { error } = await supabase
+        const { error: unitError } = await supabase
           .from('units')
           .insert([unitForm]);
-        if (error) throw error;
+        if (unitError) throw unitError;
         toast({ title: "Unit created successfully!" });
       }
       setOpenDialog(null);
       resetForms();
       window.location.reload(); // Refresh data
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: "Failed to save unit", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -135,23 +135,23 @@ export const Dashboard: React.FC = () => {
     setIsLoading(true);
     try {
       if (editingItem) {
-        const { error } = await supabase
+        const { error: roomUpdateError } = await supabase
           .from('rooms')
           .update(roomForm)
           .eq('id', editingItem.id);
-        if (error) throw error;
+        if (roomUpdateError) throw roomUpdateError;
         toast({ title: "Room updated successfully!" });
       } else {
-        const { error } = await supabase
+        const { error: roomCreateError } = await supabase
           .from('rooms')
           .insert([roomForm]);
-        if (error) throw error;
+        if (roomCreateError) throw roomCreateError;
         toast({ title: "Room created successfully!" });
       }
       setOpenDialog(null);
       resetForms();
       window.location.reload();
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: "Failed to save room", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -162,23 +162,23 @@ export const Dashboard: React.FC = () => {
     setIsLoading(true);
     try {
       if (editingItem) {
-        const { error } = await supabase
+        const { error: bedUpdateError } = await supabase
           .from('beds')
           .update(bedForm)
           .eq('id', editingItem.id);
-        if (error) throw error;
+        if (bedUpdateError) throw bedUpdateError;
         toast({ title: "Bed updated successfully!" });
       } else {
-        const { error } = await supabase
+        const { error: bedCreateError } = await supabase
           .from('beds')
           .insert([bedForm]);
-        if (error) throw error;
+        if (bedCreateError) throw bedCreateError;
         toast({ title: "Bed created successfully!" });
       }
       setOpenDialog(null);
       resetForms();
       window.location.reload();
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: "Failed to save bed", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -199,7 +199,7 @@ export const Dashboard: React.FC = () => {
       }
       setOpenDialog(null);
       resetForms();
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: "Failed to save patient", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -216,23 +216,23 @@ export const Dashboard: React.FC = () => {
         if (result.error) throw new Error(result.error);
       } else {
         const tableName = type === 'unit' ? 'units' : type === 'room' ? 'rooms' : 'beds';
-        const { error } = await supabase
+        const { error: deleteError } = await supabase
           .from(tableName)
           .delete()
           .eq('id', id);
         
-        if (error) throw error;
+        if (deleteError) throw deleteError;
         window.location.reload();
       }
       toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!` });
-    } catch (error) {
+    } catch {
       toast({ title: "Error", description: `Failed to delete ${type}`, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const openEditDialog = (type: 'unit' | 'room' | 'bed' | 'patient', item: any) => {
+  const openEditDialog = (type: 'unit' | 'room' | 'bed' | 'patient', item: Record<string, unknown>) => {
     setEditingItem(item);
     
     if (type === 'unit') {

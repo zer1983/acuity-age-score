@@ -63,7 +63,7 @@ export const AssessmentForm: React.FC = () => {
   
   const [showResults, setShowResults] = useState(false);
   const [viewMode, setViewMode] = useState<'assessment' | 'history'>('assessment');
-  const [assessmentSaved, setAssessmentSaved] = useState(false);
+  // const [assessmentSaved] = useState(false);
 
   
   // Refs for auto-scroll
@@ -107,9 +107,9 @@ export const AssessmentForm: React.FC = () => {
               age: assessment.patient_age,
               name: assessment.patient_name,
               gender: assessment.patient_gender,
-              unit_id: (assessment as any).unit_id || '',
-              room_id: (assessment as any).room_id || '',
-              bed_id: (assessment as any).bed_id || ''
+              unit_id: assessment.unit_id || '',
+              room_id: assessment.room_id || '',
+              bed_id: assessment.bed_id || ''
             });
 
             // Load answers
@@ -134,9 +134,9 @@ export const AssessmentForm: React.FC = () => {
               age: assessment.patient_age,
               name: assessment.patient_name,
               gender: assessment.patient_gender,
-              unit_id: (assessment as any).unit_id || '',
-              room_id: (assessment as any).room_id || '',
-              bed_id: (assessment as any).bed_id || ''
+              unit_id: assessment.unit_id || '',
+              room_id: assessment.room_id || '',
+              bed_id: assessment.bed_id || ''
             }));
             localStorage.setItem('assessment-answers', JSON.stringify(loadedAnswers));
             

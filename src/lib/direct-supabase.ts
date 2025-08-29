@@ -62,7 +62,7 @@ export const assessmentUtils = {
   },
 
   // Save assessment with answers
-  async saveAssessmentWithAnswers(assessmentData: any, answersData: any[]) {
+  async saveAssessmentWithAnswers(assessmentData: Record<string, unknown>, answersData: Record<string, unknown>[]) {
     try {
       // Start a transaction
       const { data: assessment, error: assessmentError } = await supabase
@@ -99,7 +99,7 @@ export const assessmentUtils = {
   },
 
   // Update assessment
-  async updateAssessment(assessmentId: string, assessmentData: any, answersData: any[]) {
+  async updateAssessment(assessmentId: string, assessmentData: Record<string, unknown>, answersData: Record<string, unknown>[]) {
     try {
       const { data: assessment, error: assessmentError } = await supabase
         .from('assessments')
@@ -170,7 +170,7 @@ export const profileUtils = {
   },
 
   // Update user profile
-  async updateUserProfile(userId: string, updates: any) {
+  async updateUserProfile(userId: string, updates: Record<string, unknown>) {
     try {
       const { data, error } = await supabase
         .from('profiles')

@@ -78,14 +78,11 @@ export const useAssessmentData = () => {
         setLoading(true);
         
         // Fetch all data in parallel
-        const [categoriesRes, questionsRes, answersRes, populationsRes, unitsRes, roomsRes, bedsRes] = await Promise.all([
+        const [categoriesRes, questionsRes, answersRes, populationsRes] = await Promise.all([
           supabase.from('Category').select('*').order('Category_ID'),
           supabase.from('Question').select('*').order('Question_ID'),
           supabase.from('answer').select('*').order('Question_ID'),
-          supabase.from('Population').select('*').order('PID'),
-          supabase.from('units').select('id, name').order('name'),
-          supabase.from('rooms').select('id, name, unit_id').order('name'),
-          supabase.from('beds').select('id, label, room_id').order('label')
+          supabase.from('Population').select('*').order('PID')
         ]);
 
         if (categoriesRes.error) throw categoriesRes.error;
@@ -93,9 +90,7 @@ export const useAssessmentData = () => {
         if (answersRes.error) throw answersRes.error;
         if (populationsRes.error) throw populationsRes.error;
         // Facility tables may not exist yet in deployed DB; tolerate 404s
-        const unitsError = unitsRes.error as unknown as { code?: string } | null;
-        const roomsError = roomsRes.error as unknown as { code?: string } | null;
-        const bedsError = bedsRes.error as unknown as { code?: string } | null;
+        // Note: Error handling for facility tables is handled separately below
 
         const categories = categoriesRes.data as Category[];
         const questions = questionsRes.data as Question[];
