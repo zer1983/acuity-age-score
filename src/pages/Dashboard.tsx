@@ -1,318 +1,96 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
 import { UserNav } from '@/components/UserNav';
-import { Building2, DoorOpen, Bed, Plus, Edit, Trash2, Settings, UserCheck } from 'lucide-react';
-import { useAssessmentData } from '@/hooks/useAssessmentData';
-import { usePatientData } from '@/hooks/usePatientData';
-import { Patient } from '@/types/assessment';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-
-interface UnitFormData {
-  name: string;
-  description: string;
-  floor_number: number;
-  capacity: number;
-}
-
-interface RoomFormData {
-  unit_id: string;
-  name: string;
-  room_number: string;
-  room_type: string;
-  capacity: number;
-}
-
-interface BedFormData {
-  room_id: string;
-  label: string;
-  bed_number: string;
-  bed_type: string;
-  is_occupied: boolean;
-}
-
-interface PatientFormData {
-  patient_id: string;
-  name: string;
-  age: number;
-  gender: string;
-  unit_id: string;
-  room_id: string;
-  bed_id: string;
-  admission_date: string;
-  status: 'active' | 'discharged';
-}
+import { useUserRole } from '@/hooks/useUserRole';
+import { HospitalAdminDashboard } from '@/components/HospitalAdminDashboard';
+import { UnitAdminDashboard } from '@/components/UnitAdminDashboard';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
-  const { units, rooms, beds, roomsByUnit, bedsByRoom } = useAssessmentData();
-  const { patients, createPatient, updatePatient, deletePatient } = usePatientData();
-  const [isLoading, setIsLoading] = useState(false);
-  const [openDialog, setOpenDialog] = useState<'unit' | 'room' | 'bed' | 'patient' | null>(null);
-  const [editingItem, setEditingItem] = useState<any>(null);
-  
-  const [unitForm, setUnitForm] = useState<UnitFormData>({
-    name: '',
-    description: '',
-    floor_number: 1,
-    capacity: 1
-  });
+  const { userProfile, loading, isHospitalAdmin, isUnitAdmin } = useUserRole();
 
-  const [roomForm, setRoomForm] = useState<RoomFormData>({
-    unit_id: '',
-    name: '',
-    room_number: '',
-    room_type: 'standard',
-    capacity: 1
-  });
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 bg-gray-300 rounded animate-pulse"></div>
+              <div>
+                <div className="h-8 w-64 bg-gray-300 rounded animate-pulse mb-2"></div>
+                <div className="h-4 w-48 bg-gray-300 rounded animate-pulse"></div>
+              </div>
+            </div>
+            <UserNav />
+          </div>
+          
+          <Card>
+            <CardContent className="flex items-center justify-center p-12">
+              <div className="flex items-center gap-2 text-gray-600">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Loading dashboard...</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
-  const [bedForm, setBedForm] = useState<BedFormData>({
-    room_id: '',
-    label: '',
-    bed_number: '',
-    bed_type: 'standard',
-    is_occupied: false
-  });
-
-  const [patientForm, setPatientForm] = useState<PatientFormData>({
-    patient_id: '',
-    name: '',
-    age: 0,
-    gender: 'Male',
-    unit_id: '',
-    room_id: '',
-    bed_id: '',
-    admission_date: new Date().toISOString().split('T')[0],
-    status: 'active'
-  });
-
-  const resetForms = () => {
-    setUnitForm({ name: '', description: '', floor_number: 1, capacity: 1 });
-    setRoomForm({ unit_id: '', name: '', room_number: '', room_type: 'standard', capacity: 1 });
-    setBedForm({ room_id: '', label: '', bed_number: '', bed_type: 'standard', is_occupied: false });
-    setPatientForm({ 
-      patient_id: '', name: '', age: 0, gender: 'Male', unit_id: '', room_id: '', bed_id: '', 
-      admission_date: new Date().toISOString().split('T')[0], status: 'active' 
-    });
-    setEditingItem(null);
-  };
-
-  const handleSaveUnit = async () => {
-    setIsLoading(true);
-    try {
-      if (editingItem) {
-        const { error } = await supabase
-          .from('units')
-          .update(unitForm)
-          .eq('id', editingItem.id);
-        if (error) throw error;
-        toast({ title: "Unit updated successfully!" });
-      } else {
-        const { error } = await supabase
-          .from('units')
-          .insert([unitForm]);
-        if (error) throw error;
-        toast({ title: "Unit created successfully!" });
-      }
-      setOpenDialog(null);
-      resetForms();
-      window.location.reload(); // Refresh data
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save unit", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSaveRoom = async () => {
-    setIsLoading(true);
-    try {
-      if (editingItem) {
-        const { error } = await supabase
-          .from('rooms')
-          .update(roomForm)
-          .eq('id', editingItem.id);
-        if (error) throw error;
-        toast({ title: "Room updated successfully!" });
-      } else {
-        const { error } = await supabase
-          .from('rooms')
-          .insert([roomForm]);
-        if (error) throw error;
-        toast({ title: "Room created successfully!" });
-      }
-      setOpenDialog(null);
-      resetForms();
-      window.location.reload();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save room", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSaveBed = async () => {
-    setIsLoading(true);
-    try {
-      if (editingItem) {
-        const { error } = await supabase
-          .from('beds')
-          .update(bedForm)
-          .eq('id', editingItem.id);
-        if (error) throw error;
-        toast({ title: "Bed updated successfully!" });
-      } else {
-        const { error } = await supabase
-          .from('beds')
-          .insert([bedForm]);
-        if (error) throw error;
-        toast({ title: "Bed created successfully!" });
-      }
-      setOpenDialog(null);
-      resetForms();
-      window.location.reload();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save bed", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSavePatient = async () => {
-    setIsLoading(true);
-    try {
-      if (editingItem) {
-        const result = await updatePatient(editingItem.id, patientForm);
-        if (result.error) throw new Error(result.error);
-        toast({ title: "Patient updated successfully!" });
-      } else {
-        const result = await createPatient(patientForm);
-        if (result.error) throw new Error(result.error);
-        toast({ title: "Patient created successfully!" });
-      }
-      setOpenDialog(null);
-      resetForms();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save patient", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async (type: 'unit' | 'room' | 'bed' | 'patient', id: string) => {
-    if (!confirm(`Are you sure you want to delete this ${type}? This action cannot be undone.`)) return;
-    
-    setIsLoading(true);
-    try {
-      if (type === 'patient') {
-        const result = await deletePatient(id);
-        if (result.error) throw new Error(result.error);
-      } else {
-        const tableName = type === 'unit' ? 'units' : type === 'room' ? 'rooms' : 'beds';
-        const { error } = await supabase
-          .from(tableName)
-          .delete()
-          .eq('id', id);
-        
-        if (error) throw error;
-        window.location.reload();
-      }
-      toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!` });
-    } catch (error) {
-      toast({ title: "Error", description: `Failed to delete ${type}`, variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const openEditDialog = (type: 'unit' | 'room' | 'bed' | 'patient', item: any) => {
-    setEditingItem(item);
-    
-    if (type === 'unit') {
-      setUnitForm({
-        name: item.name,
-        description: item.description || '',
-        floor_number: item.floor_number,
-        capacity: item.capacity
-      });
-    } else if (type === 'room') {
-      setRoomForm({
-        unit_id: item.unit_id,
-        name: item.name,
-        room_number: item.room_number,
-        room_type: item.room_type,
-        capacity: item.capacity
-      });
-    } else if (type === 'bed') {
-      setBedForm({
-        room_id: item.room_id,
-        label: item.label,
-        bed_number: item.bed_number,
-        bed_type: item.bed_type,
-        is_occupied: item.is_occupied
-      });
-    } else if (type === 'patient') {
-      setPatientForm({
-        patient_id: item.patient_id,
-        name: item.name,
-        age: item.age,
-        gender: item.gender,
-        unit_id: item.unit_id || '',
-        room_id: item.room_id || '',
-        bed_id: item.bed_id || '',
-        admission_date: item.admission_date,
-        status: item.status || 'active'
-      });
-    }
-    
-    setOpenDialog(type);
-  };
+  if (!userProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 bg-gray-300 rounded"></div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                <p className="text-red-600 dark:text-red-400">Profile not found</p>
+              </div>
+            </div>
+            <UserNav />
+          </div>
+          
+          <Card>
+            <CardContent className="flex items-center justify-center p-12">
+              <div className="text-center">
+                <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+                  Unable to load your profile. Please contact your administrator.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Settings className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Hospital Management Dashboard
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Manage units, rooms, and beds
-              </p>
-            </div>
-          </div>
           <UserNav />
         </div>
 
-        <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="patients" className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4" />
-              Patients
-            </TabsTrigger>
-            <TabsTrigger value="units" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Units
-            </TabsTrigger>
-            <TabsTrigger value="rooms" className="flex items-center gap-2">
-              <DoorOpen className="h-4 w-4" />
-              Rooms
-            </TabsTrigger>
-            <TabsTrigger value="beds" className="flex items-center gap-2">
-              <Bed className="h-4 w-4" />
-              Beds
-            </TabsTrigger>
-          </TabsList>
+        {isHospitalAdmin() && <HospitalAdminDashboard />}
+        {isUnitAdmin() && <UnitAdminDashboard />}
+        
+        {!isHospitalAdmin() && !isUnitAdmin() && (
+          <Card>
+            <CardContent className="flex items-center justify-center p-12">
+              <div className="text-center">
+                <p className="text-lg text-gray-600 dark:text-gray-400">
+                  You don't have dashboard access. Please contact your administrator.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+};
 
           {/* Patients Tab */}
           <TabsContent value="patients">
