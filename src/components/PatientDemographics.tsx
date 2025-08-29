@@ -136,7 +136,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {(units || []).length === 0 ? (
-                  <SelectItem disabled value="">No units available</SelectItem>
+                  <SelectItem disabled value="no-units">No units available</SelectItem>
                 ) : (units || []).map((u) => (
                   <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                 ))}
@@ -152,7 +152,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {(patientData.unit_id ? (roomsByUnit[patientData.unit_id] || []) : []).length === 0 ? (
-                  <SelectItem disabled value="">No rooms</SelectItem>
+                  <SelectItem disabled value="no-rooms">No rooms</SelectItem>
                 ) : (patientData.unit_id ? (roomsByUnit[patientData.unit_id] || []) : []).map((r) => (
                   <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                 ))}
@@ -168,7 +168,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {(patientData.room_id ? (bedsByRoom[patientData.room_id] || []) : []).length === 0 ? (
-                  <SelectItem disabled value="">No beds</SelectItem>
+                  <SelectItem disabled value="no-beds">No beds</SelectItem>
                 ) : (patientData.room_id ? (bedsByRoom[patientData.room_id] || []) : []).map((b) => (
                   <SelectItem key={b.id} value={b.id}>{b.label}</SelectItem>
                 ))}
