@@ -70,9 +70,10 @@ export const useAssessmentData = () => {
         if (questionsRes.error) throw questionsRes.error;
         if (answersRes.error) throw answersRes.error;
         if (populationsRes.error) throw populationsRes.error;
-        if (unitsRes.error) throw unitsRes.error;
-        if (roomsRes.error) throw roomsRes.error;
-        if (bedsRes.error) throw bedsRes.error;
+        // Facility tables may not exist yet in deployed DB; tolerate 404s
+        const unitsError = unitsRes.error as unknown as { code?: string } | null;
+        const roomsError = roomsRes.error as unknown as { code?: string } | null;
+        const bedsError = bedsRes.error as unknown as { code?: string } | null;
 
         const categories = categoriesRes.data as Category[];
         const questions = questionsRes.data as Question[];
@@ -122,10 +123,11 @@ export const useAssessmentData = () => {
 
         setQuestions(transformedQuestions);
         setCategories(uniqueCategories);
-        // facility structures
-        setUnits((unitsRes.data || []) as Array<{ id: string; name: string }>);
-        const roomsData = (roomsRes.data || []) as Array<{ id: string; name: string; unit_id: string }>;
-        const bedsData = (bedsRes.data || []) as Array<{ id: string; label: string; room_id: string }>;
+        // facility structures (gracefully handle missing tables)
+        const unitsData = (unitsError ? [] : (unitsRes.data || [])) as Array<{ id: string; name: string }>;
+        const roomsData = (roomsError ? [] : (roomsRes.data || [])) as Array<{ id: string; name: string; unit_id: string }>;
+        const bedsData = (bedsError ? [] : (bedsRes.data || [])) as Array<{ id: string; label: string; room_id: string }>;
+        setUnits(unitsData);
         const roomsByUnitMap: Record<string, Array<{ id: string; name: string }>> = {};
         roomsData.forEach(r => {
           if (!roomsByUnitMap[r.unit_id]) roomsByUnitMap[r.unit_id] = [];
