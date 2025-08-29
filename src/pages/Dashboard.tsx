@@ -48,6 +48,7 @@ interface PatientFormData {
   room_id: string;
   bed_id: string;
   admission_date: string;
+  status: 'active' | 'discharged';
 }
 
 export const Dashboard: React.FC = () => {
@@ -88,7 +89,8 @@ export const Dashboard: React.FC = () => {
     unit_id: '',
     room_id: '',
     bed_id: '',
-    admission_date: new Date().toISOString().split('T')[0]
+    admission_date: new Date().toISOString().split('T')[0],
+    status: 'active'
   });
 
   const resetForms = () => {
@@ -97,7 +99,7 @@ export const Dashboard: React.FC = () => {
     setBedForm({ room_id: '', label: '', bed_number: '', bed_type: 'standard', is_occupied: false });
     setPatientForm({ 
       patient_id: '', name: '', age: 0, gender: 'Male', unit_id: '', room_id: '', bed_id: '', 
-      admission_date: new Date().toISOString().split('T')[0] 
+      admission_date: new Date().toISOString().split('T')[0], status: 'active' 
     });
     setEditingItem(null);
   };
@@ -265,7 +267,8 @@ export const Dashboard: React.FC = () => {
         unit_id: item.unit_id || '',
         room_id: item.room_id || '',
         bed_id: item.bed_id || '',
-        admission_date: item.admission_date
+        admission_date: item.admission_date,
+        status: item.status || 'active'
       });
     }
     

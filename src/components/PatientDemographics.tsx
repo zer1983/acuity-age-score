@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { User, Calendar, Hash, Users, Search } from 'lucide-react';
 import { useAssessmentData } from '@/hooks/useAssessmentData';
 import { usePatientData } from '@/hooks/usePatientData';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 
 interface PatientDemographicsProps {
@@ -27,7 +28,19 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
 }) => {
   const { units, roomsByUnit, bedsByRoom } = useAssessmentData();
   const { patients } = usePatientData();
+  const { userProfile, isUnitAdmin } = useUserRole();
   const [showPatientSelect, setShowPatientSelect] = React.useState(false);
+
+  // Filter patients based on user role
+  const availablePatients = React.useMemo(() => {
+    if (isUnitAdmin() && userProfile?.unit_id) {
+      return patients.filter(patient => 
+        patient.status === 'active' && 
+        patient.unit_id === userProfile.unit_id
+      );
+    }
+    return patients.filter(patient => patient.status === 'active');
+  }, [patients, isUnitAdmin, userProfile?.unit_id]);
   const handleChange = (field: keyof typeof patientData, value: string | number) => {
     onPatientDataChange({
       ...patientData,
@@ -100,7 +113,9 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({
                 <SelectValue placeholder="Choose a patient..." />
               </SelectTrigger>
               <SelectContent>
-                {patients.map((patient) => (
+                {availablePatients.length === 0 ? (
+                  <SelectItem disabled value="no-patients">No active patients available</SelectItem>
+                ) : availablePatients.map((patient) => (
                   <SelectItem key={patient.id} value={patient.id}>
                     {patient.patient_id} - {patient.name} ({patient.age}y, {patient.gender})
                   </SelectItem>

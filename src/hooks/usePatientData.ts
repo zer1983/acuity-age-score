@@ -21,7 +21,10 @@ export const usePatientData = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPatients(data || []);
+      setPatients(data?.map(patient => ({
+        ...patient,
+        status: patient.status as 'active' | 'discharged'
+      })) || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch patients');
     } finally {

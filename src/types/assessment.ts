@@ -37,6 +37,8 @@ export interface Patient {
   room_id?: string;
   bed_id?: string;
   admission_date: string;
+  discharge_date?: string;
+  status: 'active' | 'discharged';
   created_at: string;
   updated_at: string;
 }
@@ -63,6 +65,13 @@ export interface SavedAssessment {
   patient_gender: string;
   total_score: number;
   assessment_date: string;
+  shift: 'morning' | 'evening';
+  assessment_data?: any;
+  created_by?: string;
+  unit_id?: string;
+  room_id?: string;
+  bed_id?: string;
+  patient_id?: string;
   created_at: string;
   updated_at: string;
   answers: AssessmentAnswerRecord[];
@@ -120,4 +129,54 @@ export interface AssessmentFilters {
 export interface SortOptions {
   field: keyof SavedAssessment;
   direction: 'asc' | 'desc';
+}
+
+// User role types
+export type UserRole = 'hospital_admin' | 'unit_admin' | 'user';
+
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  full_name?: string;
+  email?: string;
+  username?: string;
+  role: UserRole;
+  unit_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Hospital structure types
+export interface Unit {
+  id: string;
+  name: string;
+  description?: string;
+  capacity?: number;
+  floor_number?: number;
+  hospital_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Room {
+  id: string;
+  name: string;
+  room_number: string;
+  unit_id: string;
+  room_type?: string;
+  capacity: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Bed {
+  id: string;
+  label: string;
+  bed_number: string;
+  room_id: string;
+  bed_type?: string;
+  is_occupied?: boolean;
+  bed_status: 'occupied' | 'available';
+  created_at: string;
+  updated_at: string;
 }

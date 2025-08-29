@@ -86,45 +86,54 @@ export type Database = {
       }
       assessments: {
         Row: {
+          assessment_data: Json | null
           assessment_date: string
           bed_id: string | null
           created_at: string
+          created_by: string | null
           id: string
           patient_age: number
           patient_gender: string
           patient_id: string | null
           patient_name: string
           room_id: string | null
+          shift: string | null
           total_score: number | null
           unit_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          assessment_data?: Json | null
           assessment_date?: string
           bed_id?: string | null
           created_at?: string
+          created_by?: string | null
           id?: string
           patient_age: number
           patient_gender: string
           patient_id?: string | null
           patient_name: string
           room_id?: string | null
+          shift?: string | null
           total_score?: number | null
           unit_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          assessment_data?: Json | null
           assessment_date?: string
           bed_id?: string | null
           created_at?: string
+          created_by?: string | null
           id?: string
           patient_age?: number
           patient_gender?: string
           patient_id?: string | null
           patient_name?: string
           room_id?: string | null
+          shift?: string | null
           total_score?: number | null
           unit_id?: string | null
           updated_at?: string
@@ -171,6 +180,7 @@ export type Database = {
       beds: {
         Row: {
           bed_number: string
+          bed_status: string | null
           bed_type: string | null
           created_at: string
           id: string
@@ -181,6 +191,7 @@ export type Database = {
         }
         Insert: {
           bed_number: string
+          bed_status?: string | null
           bed_type?: string | null
           created_at?: string
           id?: string
@@ -191,6 +202,7 @@ export type Database = {
         }
         Update: {
           bed_number?: string
+          bed_status?: string | null
           bed_type?: string | null
           created_at?: string
           id?: string
@@ -241,11 +253,13 @@ export type Database = {
           age: number
           bed_id: string | null
           created_at: string
+          discharge_date: string | null
           gender: string
           id: string
           name: string
           patient_id: string
           room_id: string | null
+          status: string | null
           unit_id: string | null
           updated_at: string
         }
@@ -254,11 +268,13 @@ export type Database = {
           age: number
           bed_id?: string | null
           created_at?: string
+          discharge_date?: string | null
           gender: string
           id?: string
           name: string
           patient_id: string
           room_id?: string | null
+          status?: string | null
           unit_id?: string | null
           updated_at?: string
         }
@@ -267,11 +283,13 @@ export type Database = {
           age?: number
           bed_id?: string | null
           created_at?: string
+          discharge_date?: string | null
           gender?: string
           id?: string
           name?: string
           patient_id?: string
           room_id?: string | null
+          status?: string | null
           unit_id?: string | null
           updated_at?: string
         }
@@ -321,8 +339,10 @@ export type Database = {
           full_name: string | null
           id: string
           role: string | null
+          unit_id: string | null
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           created_at?: string
@@ -330,8 +350,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: string | null
+          unit_id?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           created_at?: string
@@ -339,10 +361,20 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: string | null
+          unit_id?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       Question: {
         Row: {
@@ -427,6 +459,7 @@ export type Database = {
           created_at: string
           description: string | null
           floor_number: number | null
+          hospital_id: string | null
           id: string
           name: string
           updated_at: string
@@ -436,6 +469,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           floor_number?: number | null
+          hospital_id?: string | null
           id?: string
           name: string
           updated_at?: string
@@ -445,6 +479,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           floor_number?: number | null
+          hospital_id?: string | null
           id?: string
           name?: string
           updated_at?: string

@@ -74,6 +74,9 @@ export const useAssessmentStorage = () => {
           room_id: submission.patientData.room_id ?? null,
           bed_id: submission.patientData.bed_id ?? null,
           total_score: submission.totalScore,
+          shift: new Date().getHours() < 12 ? 'morning' : 'evening',
+          assessment_data: JSON.parse(JSON.stringify({ answers: submission.answers })),
+          created_by: user.id
         })
         .select()
         .single();
