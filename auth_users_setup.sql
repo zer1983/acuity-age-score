@@ -45,7 +45,7 @@ BEGIN
                 'authenticated',
                 'authenticated',
                 user_record.email,
-                crypt('123123', gen_salt('bf')), -- Default password: 123123
+                crypt('123123', gen_salt('bf')),
                 now(),
                 now(),
                 now(),

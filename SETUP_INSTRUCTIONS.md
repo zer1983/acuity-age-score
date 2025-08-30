@@ -18,7 +18,7 @@ This will:
 
 ## Step 3: Set Up Authentication
 
-Copy and paste the contents of `auth_users_setup.sql` into the SQL Editor and click **Run**.
+Copy and paste the contents of `simple_auth_setup.sql` into the SQL Editor and click **Run**.
 
 This will:
 - ✅ Create authentication entries for all users
