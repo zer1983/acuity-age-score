@@ -4,7 +4,7 @@
 -- This creates auth.users and profiles for all predefined users
 -- ===============================================================
 
--- Create a function to manually create auth users
+-- First, let's create a function that will handle the auth user creation properly
 CREATE OR REPLACE FUNCTION create_auth_users_for_predefined()
 RETURNS void
 LANGUAGE plpgsql
@@ -12,15 +12,18 @@ SECURITY DEFINER
 AS $$
 DECLARE
     user_record RECORD;
-    user_id UUID;
+    auth_user_id UUID;
 BEGIN
     -- Loop through all users in the users table
     FOR user_record IN SELECT * FROM public.users LOOP
-        -- Generate a UUID for this user if needed, or use existing
-        user_id := user_record.id;
         
-        -- Create auth user (skip if already exists)
-        BEGIN
+        -- Check if auth user already exists
+        IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = user_record.email) THEN
+            
+            -- Generate a new UUID for auth user
+            auth_user_id := gen_random_uuid();
+            
+            -- Insert into auth.users with proper structure
             INSERT INTO auth.users (
                 instance_id,
                 id,
@@ -41,7 +44,7 @@ BEGIN
                 recovery_token
             ) VALUES (
                 '00000000-0000-0000-0000-000000000000',
-                user_id,
+                auth_user_id,
                 'authenticated',
                 'authenticated',
                 user_record.email,
@@ -60,36 +63,31 @@ BEGIN
             );
             
             RAISE NOTICE 'Created auth user for: %', user_record.email;
-        EXCEPTION
-            WHEN unique_violation THEN
-                RAISE NOTICE 'Auth user already exists for: %', user_record.email;
-        END;
+        ELSE
+            RAISE NOTICE 'Auth user already exists for: %', user_record.email;
+        END IF;
         
-        -- Create profile (skip if already exists)
-        BEGIN
+        -- Create or update profile
+        IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE user_id = user_record.id) THEN
             INSERT INTO public.profiles (user_id, full_name, email, role)
-            VALUES (user_id, user_record.full_name, user_record.email, user_record.role);
-            
+            VALUES (user_record.id, user_record.full_name, user_record.email, user_record.role);
             RAISE NOTICE 'Created profile for: %', user_record.email;
-        EXCEPTION
-            WHEN unique_violation THEN
-                -- Update existing profile
-                UPDATE public.profiles 
-                SET full_name = user_record.full_name,
-                    email = user_record.email,
-                    role = user_record.role,
-                    updated_at = now()
-                WHERE user_id = user_id;
-                
-                RAISE NOTICE 'Updated profile for: %', user_record.email;
-        END;
+        ELSE
+            UPDATE public.profiles 
+            SET full_name = user_record.full_name,
+                email = user_record.email,
+                role = user_record.role,
+                updated_at = now()
+            WHERE user_id = user_record.id;
+            RAISE NOTICE 'Updated profile for: %', user_record.email;
+        END IF;
         
     END LOOP;
     
     RAISE NOTICE '';
     RAISE NOTICE '=== AUTHENTICATION SETUP COMPLETE ===';
-    RAISE NOTICE 'Total auth users: %', (SELECT COUNT(*) FROM auth.users WHERE instance_id = '00000000-0000-0000-0000-000000000000');
-    RAISE NOTICE 'Total profiles: %', (SELECT COUNT(*) FROM public.profiles);
+    RAISE NOTICE 'Total auth users: %', (SELECT COUNT(*) FROM auth.users WHERE email LIKE '%@hospital.com');
+    RAISE NOTICE 'Total profiles: %', (SELECT COUNT(*) FROM public.profiles WHERE email LIKE '%@hospital.com');
     RAISE NOTICE '';
     RAISE NOTICE 'All users can now log in with password: 123123';
     RAISE NOTICE '';
